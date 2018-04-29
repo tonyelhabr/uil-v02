@@ -1,0 +1,274 @@
+---
+author: ""
+date: ""
+title: ""
+output:
+  html_document:
+    toc: false
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(
+  # echo = TRUE,
+  echo = FALSE,
+  # cache = TRUE,
+  include = FALSE,
+  # results = "markdown",
+  results = "hide",
+  fig.align = "center",
+  # fig.show = "asis",
+  fig.width = 6,
+  fig.height = 6,
+  # out.width = 6,
+  # out.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+
+```
+
+```{r params}
+params <-
+  list(
+    dir_data = "data",
+    export_data = FALSE,
+    dir_viz = "figs",
+    export_viz = FALSE,
+    path_geo = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx"),
+    path_data_schools = "O:/_other/projects/uil/data/schools-cleaned.csv"
+  )
+```
+
+
+```{r packages}
+library("dplyr")
+library("ggplot2")
+library("tidyr")
+library("teplot")
+```
+
+```{r setup_vars_funcs}
+# theme_base <- function() {
+#   teplot::theme_te_b_facet(
+#     base_size = 12,
+#     plot_title_size = 16,
+#     subtitle_size = 12,
+#     axis_title_size = 12,
+#     caption_face = "plain",
+#     caption_size = 12,
+#     plot_margin = ggplot2::margin(2, 2, 2, 2)
+#   ) +
+#   ggplot2::theme(
+#     legend.text = ggplot2::element_text(size = 12)
+#   )
+# }
+# theme_base <- teplot::theme_te()
+
+create_kable <-
+  function(data = NULL, num_show = 10) {
+    
+    num_rows <- nrow(data)
+    show_fn <- ifelse(num_rows > num_show, TRUE, FALSE)
+    if(show_fn) {
+      data <- data %>% dplyr::slice(1:num_show)
+    }
+    
+    ret <-
+      data %>% 
+      knitr::kable( "html", escape = FALSE) %>%
+      kableExtra::kable_styling(full_width = FALSE, position = "center")
+    
+    if(show_fn) {
+      ret <-
+        ret %>%
+        kableExtra::add_footnote(c(sprintf("# of total rows: %.0f", num_rows)), notation = "number")
+    }
+    ret
+  }
+import_cleanly <-
+  function(path = NULL) {
+    path %>%
+      rio::import() %>%
+      tibble::as_tibble() %>% 
+      janitor::clean_names()
+  }
+
+arrange_distinctly <- function(data, ...) {
+  cols <- rlang::enquos(...)
+  data %>%
+    arrange(!!!cols) %>%
+    distinct(!!!cols)
+}
+```
+
+```{r schools_geo}
+schools_geo_raw <-
+  params$path_geo %>% 
+  import_cleanly()
+
+schools_geo <-
+  schools_geo_raw %>%
+  filter(lstate == "TX") %>% 
+  select(
+    school = name, 
+    state = lstate, 
+    county = nmcnty15, 
+    city = lcity, 
+    lat = lat1516, 
+    lon = lon1516
+  ) %>% 
+  mutate_at(vars(county), funs(gsub(" County", "", .))) %>% 
+  mutate_at(vars(state, county), funs(tolower)) %>% 
+  mutate_at(vars(school), funs(stringr::str_replace_all(., "[Hh]\\s*[Ss]$", ""))) %>% 
+  mutate_at(vars(school), funs(stringr::str_trim(.))) %>% 
+  arrange(school) %>% 
+  distinct()
+schools_geo
+# schools_geo %>%
+#   count(state, county) %>% 
+#   create_kable()
+```
+
+```{r viz_map}
+viz_map_base <-
+  teplot::create_map_state(state = "texas", show_county = FALSE) +
+  teplot::theme_te() +
+  teplot::theme_te_map()
+
+viz_map_bycnts <-
+  viz_map_base +
+  geom_polygon(
+    data = schools_geo %>%
+      count(state, county) %>%
+      inner_join(
+        get_map_data_county_tx(),
+        by = c("county" = "subregion")
+      ),
+    aes(fill = n)
+  ) +
+  scale_fill_gradient(
+    trans = "log",
+    low = "white",
+    high = "red"
+  ) +
+  theme(legend.position = "none")
+viz_map_bycnts
+
+viz_map_bycnts_2 <-
+  viz_map_base +
+  geom_point(
+    data = schools_geo,
+    aes(x = lon, y = lat, group = county, alpha = 0.1),
+    shape = 20,
+    color = "red",
+    size = 1
+  ) +
+  theme(legend.position = "none")
+viz_map_bycnts_2
+```
+
+```{r data_schools_geo}
+schools <-
+  params$path_data_schools %>% 
+  import_cleanly() %>% 
+  mutate_at(vars(school, city), funs(toupper)) %>% 
+  arrange(school, city)
+
+data_schools_geo <-
+  schools %>%
+  arrange_distinctly(school, city) %>% 
+  fuzzyjoin::stringdist_inner_join(
+    schools_geo %>%
+      rename_at(vars(school, city), funs(paste0(., "_geo"))),
+    by = c("school" = "school_geo"),
+    # distance_col = "dist",
+    max_dist = 1
+  )
+data_schools_geo
+```
+
+```{r data_schools_geo_debug, include = FALSE}
+data_schools_geo %>%
+  count(!is.na(school))
+data_schools_geo %>%
+  count(school, city, school_geo, city_geo, sort = TRUE)
+data_schools_geo %>%
+  count(school, county, city, sort = TRUE)
+data_schools_geo %>%
+  count(school, county, lat, lon, sort = TRUE)
+data_schools_geo %>%
+  count(school, city, county, lat, lon, sort = TRUE)
+data_schools_geo_bydistrict <-
+  data_schools_geo %>%
+  distinct(school, city, state, county, lat, lon) %>%
+  inner_join(
+    schools %>% 
+      filter(complvl == "District") %>% 
+      group_by(school, city) %>%
+      arrange(desc(year), .by_group = TRUE) %>% 
+      summarise_at(vars(complvl_num, conf), funs(last)) %>% 
+      ungroup() %>% 
+      distinct(school, city, complvl_num, conf),
+    by = c("school", "city")
+  )
+data_schools_geo_bydistrict %>%
+  count(school, city, conf, complvl_num, sort = TRUE)
+data_schools_geo_bydistrict %>% filter(school %in% c("FANNIDEL", "BOWIE"))
+data_schools_geo_bydistrict %>%
+  count(complvl_num, county, sort = TRUE)
+```
+
+```{r}
+data_schools_geo_bydistrict_viz <-
+  data_schools_geo_bydistrict %>%
+  mutate_at(vars(complvl_num), funs(factor)) %>% 
+  # distinct(county, complvl_num, .keep_all = TRUE) %>% 
+  group_by(county, complvl_num) %>% 
+  summarise_at(vars(lon, lat), funs(mean = mean)) %>% 
+  ungroup() %>% 
+  inner_join(
+    teplot::get_map_data_county_tx(),
+    by = c("county" = "subregion")
+  )
+viz_map_bydistrict <-
+  viz_map_base +
+  geom_polygon(
+    data = data_schools_geo_bydistrict_viz,
+    aes(group = county, fill = complvl_num),
+  ) +
+  viridis::scale_fill_viridis(
+    discrete = T,
+    option = "D",
+    guide = guide_legend(title = "District", nrow = 4, byrow = T)
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+viz_map_bydistrict
+```
+
+
+```{r eval = FALSE}
+viz_map_bydistrict <-
+  viz_map_base +
+  geom_point(
+    data = data_schools_geo_bydistrict,
+    aes(x = lon, y = lat, group = county, color = complvl_num),
+    shape = 20,
+    size = 1
+  ) +
+  # scale_alpha(guide = "none") +
+  scale_color_discrete(
+    guide = 
+      guide_legend(title = "District", 
+                   nrow = 4, 
+                   byrow = T, 
+                   override.aes = list(size = 5))
+  ) +
+  theme(
+    legend.position = "bottom"
+  )
+viz_map_bydistrict
+```
+
