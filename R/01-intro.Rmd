@@ -35,8 +35,8 @@ params <-
     export_data = FALSE,
     dir_viz = "figs",
     export_viz = FALSE,
-    path_geo = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx"),
-    path_data_schools = "O:/_other/projects/uil/data/schools-cleaned.csv"
+    path_geo_raw = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx"),
+    path_schools = "O:/_other/projects/uil/data/schools-clean.csv"
   )
 ```
 
@@ -103,34 +103,13 @@ arrange_distinctly <- function(data, ...) {
 ```
 
 ```{r schools_geo}
-schools_geo_raw <-
-  params$path_geo %>% 
+schools_geo <-
+  params$path_schools_geo_clean %>% 
   import_cleanly()
 
-schools_geo <-
-  schools_geo_raw %>%
-  filter(lstate == "TX") %>% 
-  select(
-    school = name, 
-    state = lstate, 
-    county = nmcnty15, 
-    city = lcity, 
-    lat = lat1516, 
-    lon = lon1516
-  ) %>% 
-  mutate_at(vars(county), funs(gsub(" County", "", .))) %>% 
-  mutate_at(vars(state, county), funs(tolower)) %>% 
-  mutate_at(vars(school), funs(stringr::str_replace_all(., "[Hh]\\s*[Ss]$", ""))) %>% 
-  mutate_at(vars(school), funs(stringr::str_trim(.))) %>% 
-  arrange(school) %>% 
-  distinct()
-schools_geo
-# schools_geo %>%
-#   count(state, county) %>% 
-#   create_kable()
 ```
 
-```{r viz_map}
+```{r viz_map_bycnts}
 viz_map_base <-
   teplot::create_map_state(state = "texas", show_county = FALSE) +
   teplot::theme_te() +
@@ -154,7 +133,9 @@ viz_map_bycnts <-
   ) +
   theme(legend.position = "none")
 viz_map_bycnts
+```
 
+```{r viz_map_bycnts_2, eval = FALSE}
 viz_map_bycnts_2 <-
   viz_map_base +
   geom_point(
@@ -168,65 +149,18 @@ viz_map_bycnts_2 <-
 viz_map_bycnts_2
 ```
 
-```{r data_schools_geo}
-schools <-
-  params$path_data_schools %>% 
-  import_cleanly() %>% 
-  mutate_at(vars(school, city), funs(toupper)) %>% 
-  arrange(school, city)
+```{r schools_geo}
 
-data_schools_geo <-
-  schools %>%
-  arrange_distinctly(school, city) %>% 
-  fuzzyjoin::stringdist_inner_join(
-    schools_geo %>%
-      rename_at(vars(school, city), funs(paste0(., "_geo"))),
-    by = c("school" = "school_geo"),
-    # distance_col = "dist",
-    max_dist = 1
-  )
-data_schools_geo
 ```
 
-```{r data_schools_geo_debug, include = FALSE}
-data_schools_geo %>%
-  count(!is.na(school))
-data_schools_geo %>%
-  count(school, city, school_geo, city_geo, sort = TRUE)
-data_schools_geo %>%
-  count(school, county, city, sort = TRUE)
-data_schools_geo %>%
-  count(school, county, lat, lon, sort = TRUE)
-data_schools_geo %>%
-  count(school, city, county, lat, lon, sort = TRUE)
-data_schools_geo_bydistrict <-
-  data_schools_geo %>%
-  distinct(school, city, state, county, lat, lon) %>%
-  inner_join(
-    schools %>% 
-      filter(complvl == "District") %>% 
-      group_by(school, city) %>%
-      arrange(desc(year), .by_group = TRUE) %>% 
-      summarise_at(vars(complvl_num, conf), funs(last)) %>% 
-      ungroup() %>% 
-      distinct(school, city, complvl_num, conf),
-    by = c("school", "city")
-  )
-data_schools_geo_bydistrict %>%
-  count(school, city, conf, complvl_num, sort = TRUE)
-data_schools_geo_bydistrict %>% filter(school %in% c("FANNIDEL", "BOWIE"))
-data_schools_geo_bydistrict %>%
-  count(complvl_num, county, sort = TRUE)
+```{r schools_geo_debug, include = FALSE}
+
 ```
 
 ```{r}
-data_schools_geo_bydistrict_viz <-
-  data_schools_geo_bydistrict %>%
+schools_geo_bydistrict_viz <-
+  schools_geo_bydistrict %>%
   mutate_at(vars(complvl_num), funs(factor)) %>% 
-  # distinct(county, complvl_num, .keep_all = TRUE) %>% 
-  group_by(county, complvl_num) %>% 
-  summarise_at(vars(lon, lat), funs(mean = mean)) %>% 
-  ungroup() %>% 
   inner_join(
     teplot::get_map_data_county_tx(),
     by = c("county" = "subregion")
@@ -234,7 +168,7 @@ data_schools_geo_bydistrict_viz <-
 viz_map_bydistrict <-
   viz_map_base +
   geom_polygon(
-    data = data_schools_geo_bydistrict_viz,
+    data = schools_geo_bydistrict_viz,
     aes(group = county, fill = complvl_num),
   ) +
   viridis::scale_fill_viridis(
@@ -253,7 +187,7 @@ viz_map_bydistrict
 viz_map_bydistrict <-
   viz_map_base +
   geom_point(
-    data = data_schools_geo_bydistrict,
+    data = schools_geo_bydistrict,
     aes(x = lon, y = lat, group = county, color = complvl_num),
     shape = 20,
     size = 1

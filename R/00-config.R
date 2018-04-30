@@ -1,0 +1,110 @@
+
+library("dplyr")
+library("xml2")
+library("rvest")
+library("stringr")
+library("tidyr")
+
+get_path <-
+  function(dir = NULL, file = NULL, ext = NULL) {
+    file.path(dir, paste0(file, ".", ext))
+  }
+
+const <-
+  list(
+    export = TRUE,
+    create_backup = TRUE,
+    timestamp_dl = Sys.time(),
+    dir_dl = file.path("data"),
+    file_dl = "temp",
+    ext_dl = "html",
+    dir_scrape = file.path("data"),
+    file_scrape_suffix = "-scrape",
+    ext_scrape = "csv",
+    years = seq(2004L, 2017L),
+    confs = paste0(seq(1L, 6L), "A"),
+    complvls = c("district", "regional", "state"),
+    comps = c("cal", "csc", "mth", "num", "sci"),
+    comps_list =
+      list(
+        cal = "Calculator Applications",
+        csc = "Computer Science",
+        mth = "Mathematics",
+        num = "Number Sense",
+        sci = "Science"
+      ),
+    # url_test = "https://www.hpscience.net/results/2012/4A/district/num.php"
+    url_base = "https://www.hpscience.net/results/",
+    url_suffix = ".php",
+    xpath = "/html/body/table",
+    clean = TRUE,
+    dir_clean = file.path("data"),
+    # file_clean_base = "results",
+    file_clean_suffix = "-clean",
+    ext_clean = "csv",
+    default_city = "unknown",
+    default_complvl_num = 0,
+    path_schools_geo_raw = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx"),
+    path_schools_geo_clean = file.path("data", "schools-geo-clean.csv"),
+    path_schools_geo_join = file.path("data", "schools-geo-join.csv")
+  )
+
+params <-
+  c(const,
+    list(
+      timestamp_dl_chr = format(const$timestamp_dl, "%Y-%m-%d_%H-%M-%S"),
+      path_dl = get_path(const$dir_dl, const$file_dl, const$ext_dl),
+      path_schools_scrape =
+        get_path(const$dir_scrape,
+                     paste0("schools",
+                            const$file_scrape_suffix),
+                     const$ext_scrape),
+      path_persons_scrape =
+        get_path(const$dir_scrape,
+                     paste0("persons",
+                            const$file_scrape_suffix),
+                     const$ext_scrape),
+      path_schools_scrape_ts =
+        get_path(const$dir_scrape,
+                     paste0("schools",
+                            const$file_scrape_suffix,
+                            "-",
+                            const$timestamp_dl_chr),
+                     const$ext_scrape
+        ),
+      path_persons_scrape_ts =
+        get_path(const$dir_scrape,
+                     paste0("persons",
+                            const$file_scrape_suffix,
+                            "-",
+                            const$timestamp_dl_chr),
+                     const$ext_scrape),
+      # years_scrape = seq(2010, 2016),
+      # confs_scrape = c("4A", "5A", "6A"),
+      # complvls_scrape = complvls,
+      # comps_scrape = c("cal", "mth", "num"),
+      years_scrape = const$years,
+      confs_scrape = const$confs,
+      complvls_scrape = const$complvls,
+      comps_scrape = const$comps
+    ),
+    path_schools_clean =
+      get_path(const$dir_clean,
+               paste0("schools",
+                      const$file_clean_suffix),
+               const$ext_clean),
+    path_persons_clean =
+      get_path(const$dir_clean,
+               paste0("persons",
+                      const$file_clean_suffix),
+               const$ext_clean)# ,
+    # comps_valid = tibble::tibble(comp = const$comps, comp_name = const$comps_list)
+    # comps_valid = tibble::enframe(names(const$comps_list), unlist(unname(const$comps_list)))
+  )
+
+# rt <- robotstxt::robotstxt("www.hpscience.net")
+# rt$bots
+# rt$permissions
+# rt$check()
+# rt$crawldelay %>% tbl_df()
+
