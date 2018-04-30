@@ -12,34 +12,41 @@ get_path <-
 
 const <-
   list(
-    export = TRUE,
+    scrape = TRUE,
     create_backup = TRUE,
     timestamp_dl = Sys.time(),
-    dir_dl = file.path("data"),
+    timestamp_dl_chr = format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),
+    dir_dl = "data",
     file_dl = "temp",
     ext_dl = "html",
-    dir_scrape = file.path("data"),
+    dir_scrape = "data",
     file_scrape_suffix = "-scrape",
     ext_scrape = "csv",
     years = seq(2004L, 2017L),
     confs = paste0(seq(1L, 6L), "A"),
     complvls = c("district", "regional", "state"),
-    comps = c("cal", "csc", "mth", "num", "sci"),
-    comps_list =
-      list(
-        cal = "Calculator Applications",
-        csc = "Computer Science",
-        mth = "Mathematics",
-        num = "Number Sense",
-        sci = "Science"
+    complvls_info =
+      tibble::tribble(
+        ~complvl, ~complvl_name,
+        "district", "District",
+        "regional", "Region",
+        "state", "State"
       ),
-    # url_test = "https://www.hpscience.net/results/2012/4A/district/num.php"
+    comps = c("cal", "csc", "mth", "num", "sci"),
+    comps_info =
+      tibble::tribble(
+        ~comp, ~comp_name,
+        "cal", "Calculator Applications",
+        "csc", "Computer Science",
+        "mth", "Mathematics",
+        "num", "Number Sense",
+        "sci", "Science"
+      ),
     url_base = "https://www.hpscience.net/results/",
     url_suffix = ".php",
     xpath = "/html/body/table",
     clean = TRUE,
-    dir_clean = file.path("data"),
-    # file_clean_base = "results",
+    dir_clean = "data",
     file_clean_suffix = "-clean",
     ext_clean = "csv",
     default_city = "unknown",
@@ -52,7 +59,6 @@ const <-
 params <-
   c(const,
     list(
-      timestamp_dl_chr = format(const$timestamp_dl, "%Y-%m-%d_%H-%M-%S"),
       path_dl = get_path(const$dir_dl, const$file_dl, const$ext_dl),
       path_schools_scrape =
         get_path(const$dir_scrape,
@@ -97,9 +103,7 @@ params <-
       get_path(const$dir_clean,
                paste0("persons",
                       const$file_clean_suffix),
-               const$ext_clean)# ,
-    # comps_valid = tibble::tibble(comp = const$comps, comp_name = const$comps_list)
-    # comps_valid = tibble::enframe(names(const$comps_list), unlist(unname(const$comps_list)))
+               const$ext_clean)
   )
 
 # rt <- robotstxt::robotstxt("www.hpscience.net")

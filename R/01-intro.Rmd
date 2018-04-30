@@ -149,56 +149,26 @@ viz_map_bycnts_2 <-
 viz_map_bycnts_2
 ```
 
-```{r schools_geo}
 
-```
-
-```{r schools_geo_debug, include = FALSE}
-
-```
-
-```{r}
-schools_geo_bydistrict_viz <-
-  schools_geo_bydistrict %>%
-  mutate_at(vars(complvl_num), funs(factor)) %>% 
-  inner_join(
-    teplot::get_map_data_county_tx(),
-    by = c("county" = "subregion")
-  )
+```{r viz_map_bydistrict}
 viz_map_bydistrict <-
   viz_map_base +
   geom_polygon(
-    data = schools_geo_bydistrict_viz,
+    data =
+      schools_geo_bycomplvl %>%
+      count(county, complvl_num, complvl, sort = TRUE) %>% 
+      filter(complvl == "District") %>% 
+      mutate_at(vars(complvl_num), funs(factor)) %>% 
+      inner_join(
+        teplot::get_map_data_county_tx(),
+        by = c("county" = "subregion")
+      ),
     aes(group = county, fill = complvl_num),
   ) +
   viridis::scale_fill_viridis(
     discrete = T,
     option = "D",
     guide = guide_legend(title = "District", nrow = 4, byrow = T)
-  ) +
-  theme(
-    legend.position = "bottom"
-  )
-viz_map_bydistrict
-```
-
-
-```{r eval = FALSE}
-viz_map_bydistrict <-
-  viz_map_base +
-  geom_point(
-    data = schools_geo_bydistrict,
-    aes(x = lon, y = lat, group = county, color = complvl_num),
-    shape = 20,
-    size = 1
-  ) +
-  # scale_alpha(guide = "none") +
-  scale_color_discrete(
-    guide = 
-      guide_legend(title = "District", 
-                   nrow = 4, 
-                   byrow = T, 
-                   override.aes = list(size = 5))
   ) +
   theme(
     legend.position = "bottom"

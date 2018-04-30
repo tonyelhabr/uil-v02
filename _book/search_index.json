@@ -1,0 +1,5 @@
+[
+["index.html", "A Book 1 Hello World", " A Book Tony ElHabr 1 Hello World Hi. "],
+["introduction.html", "2 Introduction", " 2 Introduction See my blog posts (to be linked here) for the full write-ups, or, check out the .html files in the output/ directory in this repo, which was used as the basis for the blog post. The figs/ directory also contains some of the visualizations in the post. The documents can be recreated with the following commands: rmarkdown::render(&quot;R/01-intro.Rmd&quot;, output_dir = &quot;output&quot;) "],
+["highlights.html", "3 Highlights", " 3 Highlights Here are a couple of the coolest visualizations, in my opinion. "]
+]

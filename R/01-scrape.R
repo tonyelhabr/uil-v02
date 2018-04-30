@@ -101,11 +101,11 @@ while (i <= length(params$years_scrape)) {
           add_cols()
 
         if (i == 1) {
-          schools_all <- schools
-          persons_all <- persons
+          schools_scrape <- schools
+          persons_scrape <- persons
         } else {
-          schools_all <- bind_rows(schools_all, schools)
-          persons_all <- bind_rows(persons_all, persons)
+          schools_scrape <- bind_rows(schools_scrape, schools)
+          persons_scrape <- bind_rows(persons_scrape, persons)
         }
         l <- l + 1
       }
@@ -118,9 +118,9 @@ while (i <= length(params$years_scrape)) {
 unlink(params$path_dl)
 
 
-if (params$export) {
-  readr::write_csv(schools_all, params$path_schools_scrape)
-  readr::write_csv(persons_all, params$path_persons_scrape)
+if (params$scrape) {
+  readr::write_csv(schools_scrape, params$path_schools_scrape)
+  readr::write_csv(persons_scrape, params$path_persons_scrape)
 
   if (params$create_backup) {
     file.copy(params$path_schools_scrape, params$path_schools_scrape_ts)
