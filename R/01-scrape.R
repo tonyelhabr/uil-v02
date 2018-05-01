@@ -1,5 +1,7 @@
 
 
+stopifnot(params$scrape)
+
 clean_raw_data <-
   function(data = NULL,
            complvl = NULL) {
@@ -118,7 +120,7 @@ while (i <= length(params$years_scrape)) {
 unlink(params$path_dl)
 
 
-if (params$scrape) {
+if (params$export_data) {
   readr::write_csv(schools_scrape, params$path_schools_scrape)
   readr::write_csv(persons_scrape, params$path_persons_scrape)
 

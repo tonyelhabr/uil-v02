@@ -1,0 +1,79 @@
+export_data: yes
+dir_data: data
+export_viz: yes
+dir_viz: figs
+scrape: yes
+create_backup: yes
+timestamp_dl: 1.5251803e+09
+timestamp_dl_chr: -2018-05-01_08-11-30
+dir_dl: data
+file_dl: temp
+ext_dl: html
+dir_scrape: data
+file_scrape_suffix: -scrape
+ext_scrape: csv
+years:
+- 2004
+- 2005
+- 2006
+- 2007
+- 2008
+- 2009
+- 2010
+- 2011
+- 2012
+- 2013
+- 2014
+- 2015
+- 2016
+- 2017
+confs:
+- 1A
+- 2A
+- 3A
+- 4A
+- 5A
+- 6A
+complvls:
+- district
+- regional
+- state
+complvls_info:
+  complvl:
+  - district
+  - regional
+  - state
+  complvl_name:
+  - District
+  - Region
+  - State
+comps:
+- cal
+- csc
+- mth
+- num
+- sci
+comps_info:
+  comp:
+  - cal
+  - csc
+  - mth
+  - num
+  - sci
+  comp_name:
+  - Calculator Applications
+  - Computer Science
+  - Mathematics
+  - Number Sense
+  - Science
+url_base: https://www.hpscience.net/results/
+url_suffix: .php
+xpath: /html/body/table
+clean: yes
+dir_clean: data
+file_clean_suffix: -clean
+ext_clean: csv
+default_city: unknown
+default_complvl_num: 0.0e+00
+path_schools_geo_raw: data-raw/EDGE_GEOCODE_PUBLICSCH_1516.xlsx
+
