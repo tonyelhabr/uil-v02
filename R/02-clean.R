@@ -3,11 +3,14 @@ stopifnot(params$clean)
 
 schools_scrape <- params$path_schools_scrape %>% import_cleanly()
 persons_scrape <- params$path_persons_scrape %>% import_cleanly()
-
+# schools_scrape %>% filter(is.na(name))
 schools_clean <-
-  clean_scrape_data(schools_scrape, params = params)
+  schools_scrape %>%
+  clean_scrape_data(params = params)
 persons_clean <-
-  clean_scrape_data(persons_scrape, params = params)
+  persons_scrape %>%
+  clean_scrape_data(params = params) %>%
+  filter(!is.na(name))
 
 if (params$export_data) {
   readr::write_csv(schools_clean, params$path_schools_clean)
@@ -16,9 +19,7 @@ if (params$export_data) {
 
 schools_geo_raw <-
   params$path_schools_geo_raw %>%
-  readxl::read_excel() %>%
-  tibble::as_tibble() %>%
-  janitor::clean_names()
+  import_cleanly()
 
 schools_geo_clean <-
   schools_geo_raw %>%

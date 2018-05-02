@@ -1,7 +1,9 @@
 
-
-get_const <- function() {
-  const <-
+# TODO: Convert `_info` data.frames to lists, then convert them to data.frames later
+# in the cleaning functions. This makes `const` more reproducible since it
+# can be converted to yaml in a more natural fashion.
+get_const <- function(sort = TRUE) {
+  ret <-
     list(
       export_data = TRUE,
       dir_data = "data",
@@ -20,6 +22,7 @@ get_const <- function() {
       years = seq(2004L, 2017L),
       confs = paste0(seq(1L, 6L), "A"),
       complvls = c("district", "regional", "state"),
+      # complvls_info_list = setNames(c("district", "regional", "state"), c("District", "Region", "State")),
       complvls_info =
         tibble::tribble(
           ~ complvl,
@@ -56,34 +59,38 @@ get_const <- function() {
       ext_clean = "csv",
       default_city = "unknown",
       default_complvl_num = 0,
-      path_schools_geo_raw = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx")
+      path_schools_geo_raw = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx"),
+      path_analysis_image = file.path("data", "analysis.RData")
     )
-  const
+  if(sort) {
+    ret <- sort_named_list(ret)
+  }
+  ret
 }
 
 
-get_params <- function(const = get_const()) {
-  params <-
+get_params <- function(const = get_const(), sort = TRUE) {
+  ret <-
     c(
       const,
       list(
-        path_dl = get_path(const$dir_dl, const$file_dl, const$ext_dl),
+        path_dl = get_path_lazily(const$dir_dl, const$file_dl, const$ext_dl),
         path_schools_scrape =
-          get_path(
+          get_path_lazily(
             const$dir_scrape,
             "schools",
             const$file_scrape_suffix,
             const$ext_scrape
           ),
         path_persons_scrape =
-          get_path(
+          get_path_lazily(
             const$dir_scrape,
             "persons",
             const$file_scrape_suffix,
             const$ext_scrape
           ),
         path_schools_scrape_ts =
-          get_path(
+          get_path_lazily(
             const$dir_scrape,
             "schools",
             const$file_scrape_suffix,
@@ -91,7 +98,7 @@ get_params <- function(const = get_const()) {
             const$ext_scrape
           ),
         path_persons_scrape_ts =
-          get_path(
+          get_path_lazily(
             const$dir_scrape,
             "persons",
             const$file_scrape_suffix,
@@ -108,23 +115,26 @@ get_params <- function(const = get_const()) {
         comps_scrape = const$comps
       ),
       path_schools_clean =
-        get_path(
+        get_path_lazily(
           const$dir_clean,
           "schools",
           const$file_clean_suffix,
           const$ext_clean
         ),
       path_persons_clean =
-        get_path(
+        get_path_lazily(
           const$dir_clean,
           "persons",
           const$file_clean_suffix,
           const$ext_clean
         ),
-      path_schools_geo_clean = get_path(const$dir_clean, "schools-geo-clean", const$ext_clean),
-      path_schools_geo_join = get_path(const$dir_clean, "schools-geo-join", const$ext_clean)
+      path_schools_geo_clean = get_path_lazily(const$dir_clean, "schools-geo-clean", const$ext_clean),
+      path_schools_geo_join = get_path_lazily(const$dir_clean, "schools-geo-join", const$ext_clean)
     )
-  params
+  if(sort) {
+    ret <- sort_named_list(ret)
+  }
+  ret
 }
 
 # rt <- robotstxt::robotstxt("www.hpscience.net")

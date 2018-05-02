@@ -1,5 +1,5 @@
 
-
+# NOTE: This really should be separated into a bunch of smaller functions.
 clean_scrape_data <-
   function(data = NULL,
            params = NULL,
@@ -60,7 +60,6 @@ clean_scrape_data <-
     # combination of the letters 'h' and 's' are found consecutively.
     # A fix is made later.
     rgx_patt <- "\\s[H]\\s*[Ss]" # "\\s[H]\\s[Ss]"
-
     rgx_repl <- ""
     data_proc_1c <-
       data_proc_1b %>%
@@ -70,12 +69,12 @@ clean_scrape_data <-
     # Separate school_city_complvlnum.
     data_proc_2a <-
       data_proc_1c %>%
-      mutate(school = str_replace(school_city_complvlnum_raw, rgx_split, "\\1"),
-             city_complvlnum = str_replace(school_city_complvlnum_raw, rgx_split, "\\3")) %>%
-      select(-school_city_complvlnum) %>%
-      # separate(school_city_complvlnum,
-      #          into = c("school", "city_complvlnum"),
-      #          sep = ", ", fill = "warn") %>%
+      # mutate(school = str_replace(school_city_complvlnum, rgx_split, "\\1"),
+      #        city_complvlnum = str_replace(school_city_complvlnum, rgx_split, "\\3")) %>%
+      # select(-school_city_complvlnum) %>%
+      separate(school_city_complvlnum,
+               into = c("school", "city_complvlnum"),
+               sep = ", ") %>%
       select(-school_city_complvlnum_raw)
 
     # Fix cases where no city is listed, so city_complvl looks something like '(32)'.
@@ -110,10 +109,10 @@ clean_scrape_data <-
     rgx_split <- "(^.*)(\\s\\()(.*$)"
     data_proc_4 <-
       data_proc_3 %>%
-      mutate(city = str_replace(city_complvlnum, rgx_split, "\\1"),
-             complvlnum = str_replace(city_complvlnum, rgx_split, "\\3")) %>%
-      select(-city_complvlnum) %>%
-      # separate(city_complvlnum, c("city", "complvlnum"), sep = "\\s\\(") %>%
+      # mutate(city = str_replace(city_complvlnum, rgx_split, "\\1"),
+      #        complvlnum = str_replace(city_complvlnum, rgx_split, "\\3")) %>%
+      # select(-city_complvlnum) %>%
+      separate(city_complvlnum, c("city", "complvlnum"), sep = "\\s\\(") %>%
       mutate(complvlnum = str_replace(complvlnum, "\\)", "")) %>%
       mutate(complvlnum = as.integer(complvlnum)) %>%
       rename(complvl_num = complvlnum) %>%

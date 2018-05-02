@@ -1,6 +1,8 @@
 
 
 stopifnot(params$scrape)
+# library("xml2")
+# library("rvest")
 
 clean_raw_data <-
   function(data = NULL,

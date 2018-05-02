@@ -1,0 +1,219 @@
+---
+author: ""
+date: ""
+title: ""
+output:
+  html_document:
+    toc: false
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(
+  # echo = TRUE,
+  echo = FALSE,
+  # cache = TRUE,
+  include = FALSE,
+  # results = "markdown",
+  results = "hide",
+  fig.align = "center",
+  # fig.show = "asis",
+  fig.width = 6,
+  fig.height = 6,
+  # out.width = 6,
+  # out.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+
+```
+
+```{r params}
+params <-
+  list(
+    dir_data = "data",
+    export_data = FALSE,
+    dir_viz = "figs",
+    export_viz = FALSE
+  )
+```
+
+```{r load}
+# source(file.path("R", "00-config.R"))
+# load(file.path("data", "analyze.RData"))
+```
+
+## Competition Participation
+
+Some of the first questions that might come to mind are those regarding participation
+in each level of competition (i.e. District, Region, and State) and conference classification.
+
+
+```{r viz_n_bycomplvl}
+viz_n_bycomplvl
+```
+
+It seems fair to say that the distribution of schools among Districts, Regions, and Conferences
+is relatively even. [^state_grouping] [^competition_groupings] This is to be expected since the UIL presumably
+tries to divide schools evenly among each grouping (to the extent possible) in
+order to stimulate fair competition.
+
+[^state_grouping]:
+The State competition level is not shown because it there is no "sub-groupings" of State
+(like there is 1, 2, 3, ... for each of the groupings shown).
+
+[^competition_groupings]:
+As a technical note, Districts, Regions, and Conferences are not really all of the same "type"
+of data. Nevertheless, these different "groupings" each stratify the sample population in some manner.
+
+Going along with curiosity about participation at each competition level and conference
+is the question of the number of distinct individual competitors and schools for each
+competition type (i.e. Calculator, Computer Science, etc.)
+
+
+```{r viz_n_bycomp}
+viz_n_bycomp
+```
+
+Science stands out when evaluating participation by competition type alone.
+
+But what about when considering 
+competition level (i.e. District, Region, and State) as well?
+
+```{r viz_n_bycompcomplvl}
+viz_n_bycompcomplvl
+```
+
+Science seems to prevail again.
+
+Now, what about when also considering conferences?
+
+```{r}
+viz_n_bycompcomplvlconf
+```
+
+Once again, all hail Science! Science appears to be the answer to the numerous
+variations of the "Which competition type/level has the most ...?" question.
+
+### Competition Scores
+
+That's enough about the volume of individuals and schools in each competition.
+What about their scores?
+
+```{r viz_comp_stats}
+viz_comp_stats
+```
+
+Take what you will from the above visual, but it is interesting to see which
+competition types have wider distributions. This could imply a number of different things:
+
++ A competition type with a wider distribution (relative to the others) may
+be more likely to attract "newbies".
+
++ Or, such a distribution may simply be headed by "experts".
+
++ Or, perhaps, it might simply imply that the test was not well made (or "fair"),
+resulting in a wide variety of scores. (On the other hand, one might simply
+see a right- or left-skewed distribution if the test is not robust.)
+
+To try to answer some of the initial questions about score distributions, let's break them
+down by year and competition level.
+
+```{r viz_comp_stats_byyear}
+viz_comp_stats_byyear
+```
+
+```{r viz_comp_stats_bycomplvl}
+viz_comp_stats_bycomplvl
+```
+
+It appears that there is no discernible trends among score distributions
+across years. Nonetheless, it is evident that score range distributions
+shift upwards with increasing competition level, as would be expected with
+more "superior" competitors advancing to higher levels of competition.
+
+The lack of pattern in score distributions
+over time is a strong indication that the tests have about the same difficulty every year.
+This implies that it would not be unreasonable to compare raw test scores
+for a given competition type when comparing individuals
+and schools across different years. [^year_to_year]
+
+[^year_to_year]
+Nonetheless, I account for year-to-year variation in my calculations.
+
+So maybe there isn't a some broad, temporal trend to the scores.
+But is there a trend in scores among the competition levels (for a given competition type)?
+One would think that, assuming that test difficulty is constant
+across competition levels, 
+there would be an aggregate increase in scores
+with increasing competition level (because only the top scoring individuals and schools advance).
+
+```{r html_comp_stats_bycomplvl_diffs}
+html_comp_stats_bycomplvl_diffs
+```
+
+```{r viz_comp_stats_bycomplvl_diffs}
+viz_comp_stats_bycomplvl_diffs
+```
+
+```{r viz_comp_stats_bycomplvl_diffs_2}
+viz_comp_stats_bycomplvl_diffs_2
+```
+
+In fact, it does appear that score distributions skew higher with higher levels
+of competition. If this were not true, then I would suspect that test are made to be
+more difficult at each competition stage. (Actually, it might be true that there _is_ some increase
+in test difficulty with advancing competitions, but such an adjustment, if it is truly made,
+does not quite offset the skill level of the advancing competitors.)
+
+Notably, it appears that Number Sense demonstrates the largest
+"jumps" in aggregate scores with increasing competition levels. Having competed
+in this competition before, I do not find this all too surprising.
+More than any other competition type, those who succeed Number Sense seem to
+rely on natural abilities (as opposed to training) to beat out the competition.
+I would go so far as to say that for some individuals, this "natural ability" may be "savant-like".
+Consequently, with increasing competition level, it is more likely that these
+"superior" competitors stand out, and, as observed here, skew
+the scoring distributions higher, with "inferior" competitors weighing down the averages.
+
+So there _does_ seem to be a trend of higher scores with higher competition level, but has that trend
+changed over time? [^trend]
+
+[^trend]:
+Recall that there is no apparent trend when not distinguishing by competition level.
+
+As with the raw scores, there does not appear to be any noticeable
+trend in the change in level of difficulty of test between each competition level
+over time. (Aside from a steep drop-off in the Science scores in 2014, there's
+nothing too interesting about this plot.)
+Along with the previous temporal visual where competition level is not distinguished,
+this plot is a strong indication that the tests (and, most likely,
+the skills of the competitors) have not changed over time.
+
+There could be a number of confounding factors that explain the relatively even
+competition level of time.
+
++ It could be that test makers have purposely adjusted the difficulty of tests
+to result in scores that are similar to historical scores for a given competition
+and/or competition level. (This may be a way to 
+
++ Or, perhaps more likely, test makers and competition skill level
+have stayed relatively the same over time.
+
+If the latter is true, at the very least
+we can say that, despite how the media or popular culture may portray younger
+generations, the prowess of the academic "elite" of the current generation of high school
+students in Texas has not dropped off
+(Nonetheless, nothing definitive should be deduced about those 
+who do not compete in UIL academic competitions and are anywhere outside of Texas.)
+
+## Conclusion
+
+In this write-up, we visualized the participation and scores of 
+academic UIL competitions in a number of different
+ways--by competition type, by competition level, by year, and by variations of these.
+Next, we'll take a closer look at some more specific questions, focusing on individual competitors.
+
+
+
+
