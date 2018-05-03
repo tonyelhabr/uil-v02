@@ -13,9 +13,9 @@ knitr::opts_chunk$set(
   # echo = TRUE,
   echo = FALSE,
   # cache = TRUE,
-  include = FALSE,
+  # include = FALSE,
   # results = "markdown",
-  results = "hide",
+  # results = "hide",
   fig.align = "center",
   # fig.show = "asis",
   fig.width = 6,
@@ -28,19 +28,10 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r params}
-params <-
-  list(
-    dir_data = "data",
-    export_data = FALSE,
-    dir_viz = "figs",
-    export_viz = FALSE
-  )
-```
 
 ```{r load}
-# source(file.path("R", "00-config.R"))
-# load(file.path("data", "analyze.RData"))
+source(file.path("R", "00-config.R"))
+load(params$path_analysis_image)
 ```
 
 ```
@@ -112,8 +103,8 @@ https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBL
 used to identify the districts and regions.)
 
 
-```{r viz_map_bycomplvl}
-viz_map_bycomplvl
+```{r viz_map_bycomplvl_grid}
+gridExtra::grid.arrange(viz_map_bycomplvl_grid)
 ```
 
 + For schools, winning is a "winner-take-all" matter: only the school with the most combined points

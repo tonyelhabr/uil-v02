@@ -1,0 +1,88 @@
+---
+author: ""
+date: ""
+title: ""
+output:
+  html_document:
+    toc: false
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(
+  # echo = TRUE,
+  echo = FALSE,
+  # cache = TRUE,
+  # include = FALSE,
+  # results = "markdown",
+  # results = "hide",
+  fig.align = "center",
+  # fig.show = "asis",
+  fig.width = 10,
+  fig.height = 10,
+  # out.width = 6,
+  # out.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+
+```
+
+```{r load}
+source(file.path("R", "00-config.R"))
+load(params$path_analysis_image)
+```
+
+## Individual Participation
+
+To begin, et's take a closer look at individual competitors. Which individuals
+have competed the most?
+
+```{r html_person_n_top}
+# persons_n %>%
+#   DT::datatable(
+#     filter = "bottom"
+#   )
+html_person_n_top
+```
+
+Although the names here may not provide much insight, the counts provide some context
+regarding the limits of individual participation.
+
+Given that individual participation may not be indicative of anything directly,
+it may be a better idea to break it down by conference. What is the count
+of unique individuals competing in each conference?
+
+
+```{r html_person_n_top_byconf}
+html_person_n_top_byconf
+```
+
+It seems that there are not as many individual competitors in the 6A conference (`conf 6`).
+This seems to be true even when stratifying the individuals into groups of ranks (by
+volume of individual participation).
+
+```{r viz_persons_n_top_byconf}
+viz_persons_n_top_byconf
+```
+
+I would hypothesize that the noticeable lack of individual competitors in conference 6A--
+which is the conference with largest high schools (according to student body size)--
+can be attributed to "allocation of talent" by these schools.
+In other words, these schools may be more likely to designate their individual
+competitors to compete in only specific competitions.
+By comparison, schools in the other conferences may be more willing to let individual
+students to compete in as many competition types as they desire, even if they have
+not prepared for them whatsoever.
+
+Along these lines, note that there is a limit on the number of entrants
+per school in a given competition. This means that smaller schools are much less likely to ever
+have enough people to reach the per-school limit, so individuals at these schools
+are welcome to compete in as many competitions as they would like.
+
+Such a phenomenon
+might be made evident by lower scores (in aggregate) for conferences where participation
+by distinct individuals is greater. Nonetheless, this was not what 
+
+
+

@@ -27,18 +27,28 @@ visualize_map_bycomplvl <-
         discrete = T,
         option = "D"
       ) +
-      theme(
-        legend.position = "bottom"
-      )
+      theme(legend.position = "bottom")
   }
 
 
-labs_n_byx <- function() {
+labs_xy_null <- function() {
     labs(x = NULL, y = NULL)
 }
 
-theme_n_byx <- function() {
-  theme(legend.position = "none")
+scale_color_set1 <- function() {
+  scale_color_brewer(palette = "Set1")
+}
+
+scale_fill_set1 <- function() {
+  scale_fill_brewer(palette = "Set1")
+}
+
+scale_y_pretty_comma <- function() {
+  scale_y_continuous(breaks = scales::pretty_breaks(), labels = scales::comma_format())
+}
+
+scale_y_pretty_percent <- function() {
+  scale_y_continuous(breaks = scales::pretty_breaks(), labels = scales::percent_format())
 }
 
 add_calc_cols <-
@@ -74,6 +84,7 @@ rank_and_arrange_at <-
       arrange(!!col_out) %>%
       select(!!col_out, everything())
   }
+
 
 rank_and_arrange <-
   function(data, col, col_out) {
@@ -183,6 +194,34 @@ summarise_n_bycompcomplvlconf <-
       arrange(comp, complvl, rnk)
   }
 
+
+
+visualize_n_bycomp_common_at <-
+  function(data = NULL, x = "comp", col_grp = NULL) {
+    data %>%
+      # inner_join(comp_icons, by = "comp") %>%
+      ggplot(aes_string(x = x, y = "n")) +
+      geom_point(aes(color = comp), size = 5) +
+      # geom_icon(aes(image = icon, color = icon), size = 0.1) +
+      geom_hline(
+        data =
+          data %>%
+          group_by(!!sym(col_grp)) %>%
+          mutate(n_mean = mean(n)),
+        aes(yintercept = n_mean),
+        color = "black",
+        linetype = "dashed",
+        size = 1
+      ) +
+      scale_color_set1() +
+      guides(color = guide_legend(override.aes = list(size = 5)))+
+      scale_x_discrete(labels = scales::wrap_format(10)) +
+      scale_y_pretty_comma() +
+      labs_xy_null() +
+      teplot::theme_te_facet()
+  }
+
+
 summarise_stats_at <-
   function(data = NULL,
            col = NULL,
@@ -193,6 +232,7 @@ summarise_stats_at <-
     stopifnot(length(intersect(names(data), col)) == 1)
     is_grouped <- ifelse(is.null(dplyr::groups(data)), FALSE, TRUE)
     if (is_grouped) {
+      # browser()
       cols_grp_chr <- as.character(dplyr::groups(data))
       cols_grp <- rlang::syms(cols_grp_chr)
       data <- dplyr::group_by(data, !!!cols_grp)
@@ -252,4 +292,53 @@ summarise_stats <-
       tidy = tidy
     )
   }
+
+summarise_stats_by_at <-
+  function(data = NULL, col = NULL, cols_grp = NULL) {
+    stopifnot(is.character(col))
+    stopifnot(is.character(cols_grp))
+    stopifnot(length(intersect(names(data), cols_grp)) == length(cols_grp))
+    cols_grp <- syms(cols_grp)
+    data %>%
+      group_by(!!!cols_grp) %>%
+      summarise_stats_at(col) %>%
+      ungroup() %>%
+      arrange(!!!cols_grp)
+  }
+
+summarise_stats_score_by_at <-
+  function(data = NULL, col = "score", cols_grp = NULL) {
+    summarise_stats_by_at(
+      data = data,
+      col = col,
+      cols_grp = cols_grp
+    )
+  }
+
+
+visualize_persons_stats_bycompx_at <-
+  function(data = NULL, x = NULL) {
+
+    # Using facet_wrap() so strip.position can be specified.
+    data %>%
+      ggplot(aes_string(x = x, y = "mean")) +
+      geom_pointrange(aes(ymin = z_n1, ymax = z_p1, color = comp)) +
+      scale_color_set1() +
+      guides(color = FALSE) +
+      facet_wrap(
+        ~ comp,
+        scales = "free",
+        nrow = n_comps,
+        labeller = label_wrap_gen(width = 12),
+        strip.position = "right"
+      ) +
+      coord_flip() +
+      labs_xy_null() +
+      teplot::theme_te_facet() +
+      theme(legend.position = "none")
+  }
+
+# rescale01 <- function(x) {
+#   (x - min(x)) / (max(x) - min(x))
+# }
 

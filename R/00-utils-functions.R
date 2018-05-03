@@ -42,7 +42,7 @@ import_cleanly <-
   }
 
 create_kable <-
-  function(data = NULL, num_show = 10, format = "markdown") {
+  function(data = NULL, num_show = 10, format = "html") {
 
     num_rows <- nrow(data)
     show_fn <- ifelse(num_rows > num_show, TRUE, FALSE)
@@ -68,6 +68,16 @@ create_kable <-
     ret
   }
 
+create_kable_md <-
+  function(format = "markdown", ...) {
+    create_kable(format = format, ...)
+  }
+
+create_kable_html <-
+  function(format = "html", ...) {
+    create_kable(format = format, ...)
+  }
+
 arrange_distinctly <- function(data, ...) {
   cols <- rlang::enquos(...)
   data %>%
@@ -75,7 +85,6 @@ arrange_distinctly <- function(data, ...) {
     distinct(!!!cols)
 }
 
-#  get_path_lazily_3
 get_path_lazily <-
   function(dir = NULL, ..., ext = NULL) {
     dots <- list(...)

@@ -13,13 +13,13 @@ knitr::opts_chunk$set(
   # echo = TRUE,
   echo = FALSE,
   # cache = TRUE,
-  include = FALSE,
+  # include = FALSE,
   # results = "markdown",
-  results = "hide",
+  # results = "hide",
   fig.align = "center",
   # fig.show = "asis",
-  fig.width = 6,
-  fig.height = 6,
+  fig.width = 10,
+  fig.height = 10,
   # out.width = 6,
   # out.height = 6,
   warning = FALSE,
@@ -28,19 +28,9 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r params}
-params <-
-  list(
-    dir_data = "data",
-    export_data = FALSE,
-    dir_viz = "figs",
-    export_viz = FALSE
-  )
-```
-
 ```{r load}
-# source(file.path("R", "00-config.R"))
-# load(file.path("data", "analyze.RData"))
+source(file.path("R", "00-config.R"))
+load(params$path_analysis_image)
 ```
 
 ## Competition Participation
@@ -88,7 +78,7 @@ Science seems to prevail again.
 
 Now, what about when also considering conferences?
 
-```{r}
+```{r viz_n_bycompcomplvlconf}
 viz_n_bycompcomplvlconf
 ```
 
@@ -100,8 +90,8 @@ variations of the "Which competition type/level has the most ...?" question.
 That's enough about the volume of individuals and schools in each competition.
 What about their scores?
 
-```{r viz_comp_stats}
-viz_comp_stats
+```{r viz_persons_stats_bycomp}
+viz_persons_stats_bycomp
 ```
 
 Take what you will from the above visual, but it is interesting to see which
@@ -116,30 +106,43 @@ be more likely to attract "newbies".
 resulting in a wide variety of scores. (On the other hand, one might simply
 see a right- or left-skewed distribution if the test is not robust.)
 
-To try to answer some of the initial questions about score distributions, let's break them
-down by year and competition level.
+To try to understand the score distributions better, let's break them
+down by year, competition level, and conference.
 
-```{r viz_comp_stats_byyear}
-viz_comp_stats_byyear
+```{r viz_persons_stats_bycomp_grid}
+gridExtra::grid.arrange(viz_persons_stats_bycomp_grid)
 ```
 
-```{r viz_comp_stats_bycomplvl}
-viz_comp_stats_bycomplvl
-```
-
-It appears that there is no discernible trends among score distributions
-across years. Nonetheless, it is evident that score range distributions
-shift upwards with increasing competition level, as would be expected with
-more "superior" competitors advancing to higher levels of competition.
-
-The lack of pattern in score distributions
++ It appears from the by-year breakdown that there is no discernible trends among score distributions
+across years. The lack of pattern in score distributions
 over time is a strong indication that the tests have about the same difficulty every year.
 This implies that it would not be unreasonable to compare raw test scores
 for a given competition type when comparing individuals
-and schools across different years. [^year_to_year]
+and schools across different years.
 
-[^year_to_year]
-Nonetheless, I account for year-to-year variation in my calculations.
++ It is evident from the competition type visual that score range distributions
+shift upwards with increasing competition level, as would be expected with
+more "superior" competitors advancing to higher levels of competition.
+
++ From the conference visual, it is apparent that scores generally increase
+with increasing conference number, which, itself, corresponds with increasing student body size.
+This could be indicative of a number of factors:
+
+    + Larger schools have more "superior" individual competitors, perhaps due
+    to having a larger "talent pool" of students.
+    + Smaller schools, in an effort to compete in as many different competition types as
+    possible and/or reach the minimum number of individual competitors needed to qualify
+    the school as a team (e.g. at least 3 individuals), 
+    push individuals to participate in competitions types that they would 
+    not normally participate even if they are not really prepared to do so.
+    (This might be considered a form of [selection bias](https://en.wikipedia.org/wiki/Selection_bias).)
+    + There may not be as many schools, and, consequently, as many students, in larger conferences,
+    leading to the possibility that the scores in the larger conference are more
+    likely to be subject to high variance.
+    
+    While I somewhat doubt the last of these possibilities (because high variance
+    would equally likely manifest in lower scores in larger conferences), the other
+    two are intuitive.
 
 So maybe there isn't a some broad, temporal trend to the scores.
 But is there a trend in scores among the competition levels (for a given competition type)?
@@ -148,17 +151,11 @@ across competition levels,
 there would be an aggregate increase in scores
 with increasing competition level (because only the top scoring individuals and schools advance).
 
-```{r html_comp_stats_bycomplvl_diffs}
-html_comp_stats_bycomplvl_diffs
+
+```{r viz_persons_stats_bycompcomplvl_diffs}
+viz_persons_stats_bycompcomplvl_diffs
 ```
 
-```{r viz_comp_stats_bycomplvl_diffs}
-viz_comp_stats_bycomplvl_diffs
-```
-
-```{r viz_comp_stats_bycomplvl_diffs_2}
-viz_comp_stats_bycomplvl_diffs_2
-```
 
 In fact, it does appear that score distributions skew higher with higher levels
 of competition. If this were not true, then I would suspect that test are made to be
@@ -176,11 +173,15 @@ Consequently, with increasing competition level, it is more likely that these
 "superior" competitors stand out, and, as observed here, skew
 the scoring distributions higher, with "inferior" competitors weighing down the averages.
 
-So there _does_ seem to be a trend of higher scores with higher competition level, but has that trend
-changed over time? [^trend]
+So there _does_ seem to be a trend of higher scores with higher competition level,
+but has _that_ trend changed over time? [^trend]
 
 [^trend]:
 Recall that there is no apparent trend when not distinguishing by competition level.
+
+```{r viz_persons_stats_bycompyear_terms}
+viz_persons_stats_bycompyear_diffs
+```
 
 As with the raw scores, there does not appear to be any noticeable
 trend in the change in level of difficulty of test between each competition level
@@ -189,6 +190,22 @@ nothing too interesting about this plot.)
 Along with the previous temporal visual where competition level is not distinguished,
 this plot is a strong indication that the tests (and, most likely,
 the skills of the competitors) have not changed over time.
+
+Such visual inferences are supported quantitatively.
+Observe the p.values of the variables for linear regression models fit for each competition type,
+where the average year-to-year score difference (as a percentage) is estimated given
+average competition-specific score and year. Taking the customary p.value threshhold of 0.05
+as the level of significance (where the p.value must be less than the thresshold
+in order to infer that the null hypothesis that the model is not predictive), the year term
+is shown to be insignificant.
+
+$$
+mean \space year \space diff \space pct = intercept + mean * \beta_{1} + year * \beta_{2}
+$$
+
+```{r html_persons_stats_bycompyear_terms}
+html_persons_stats_bycompyear_terms
+```
 
 There could be a number of confounding factors that explain the relatively even
 competition level of time.
