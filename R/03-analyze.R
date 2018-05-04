@@ -5,26 +5,30 @@ schools_geo_join <-
   params$path_schools_geo_join %>%
   import_cleanly()
 
-
 lab_title_map <-
-  "Locations of Schools,\nby Competition Level"
+  "Locations of Schools, by Competition Level"
 
 lab_caption_map <-
-  paste0(
-    "Note that some counties may be incorrectly categorized\n",
-    "due to imperfect data extraction and cleaning.",
-    "Data Source:\n",
-    "The geo-spatial data was downloaded from ",
-    "https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer\n",
-    "and combined with the school information (including districts and regions) accompanying the UIL scores\n",
-    "scraped from https://www.hpscience.net/ via \"fuzzy-joining\"."
-  )
+  str_wrap(
+    paste0(
+      "Note that some counties may be incorrectly categorized ",
+      "due to imperfect data extraction and cleaning. \n\n",
+      "Data Source:\n",
+      "The geo-spatial data was downloaded from ",
+      "https://nces.ed.gov/opengis/rest/services/K12_School_Locations",
+      "/EDGE_GEOCODE_PUBLICSCH_1516/MapServer ",
+      "and combined with the school information (including districts and regions) ",
+      "accompanying the UIL scores ",
+      "scraped from https://www.hpscience.net/ via \"fuzzy-joining\"."
+      ),
+    60)
 
 viz_map_byregion <-
   schools_geo_join %>%
   filter(complvl == "Region") %>%
   visualize_map_bycomplvl() +
   guides(fill = guide_legend(title = "Region", nrow = 1, byrow = FALSE)) +
+  theme(plot.caption = element_text(hjust = 0)) +
   labs(title = lab_title_map, caption = lab_caption_map)
 viz_map_byregion
 
@@ -79,8 +83,9 @@ persons <-
   import_cleanly() %>%
   add_calc_cols() %>%
   # separate(name, c("name_last", "name_first"), sep = ", ", remove = FALSE)
-  mutate(name_first = str_extract(name, "^.*(?=\\,)"), name_last = str_extract(name, "(?<=\\,\\s).*$")) %>%
-  filter(!is.na(name_last)) %>%
+  mutate(name_last = str_extract(name, "^.*(?=\\,)"),
+         name_first = str_extract(name, "(?<=\\,\\s).*$")) %>%
+  filter(!is.na(name)) %>%
   select(name, name_first, name_last, everything())
 # persons %>% filter(is.na(name_last))
 
@@ -105,8 +110,8 @@ viz_n_bycomplvl <-
   geom_hline(
     data = summ_n_bycomplvl %>%
       group_by(complvl) %>%
-      summarise(n_mean = mean(n)),
-    aes(yintercept = n_mean),
+      summarise(n_filtan = mean(n)),
+    aes(yintercept = n_filtan),
     color = "black",
     linetype = "dashed",
     size = 1
@@ -115,12 +120,15 @@ viz_n_bycomplvl <-
   facet_wrap (~ complvl, scales = "free") +
   labs(
     title = "Count of Schools by Different UIL Groups",
-    subtitle =
-      paste0(
-        "Note that these groupings are not subsets of the same \"parent\" group.",
-        "(Rather, they are different groupings of all schools.\n",
-        "District and Region are references to competition levels,",
-        " while conference is a classification based on school size.)\n"
+    caption =
+      str_wrap(
+        paste0(
+          "Note that these groupings are not subsets of the same \"parent\" group.",
+          "(Rather, they are different groupings of all schools.",
+          "District and Region are references to competition levels,",
+          " while conference is a classification based on school size.)"
+        ),
+        125
       )
   ) +
   labs_xy_null() +
@@ -340,6 +348,15 @@ viz_persons_stats_bycompconf <-
        subtitle = "By Conference",
        caption = lab_caption_stats_bycompx)
 
+teproj::export_ext_png(
+  viz_persons_stats_bycompconf,
+  export = params$export_viz,
+  dir = params$dir_viz,
+  units = "in",
+  height = 6,
+  width = 8
+)
+
 viz_persons_stats_bycomp_grid <-
   gridExtra::arrangeGrob(
     viz_persons_stats_bycompyear + theme(strip.text = element_blank()),
@@ -471,13 +488,14 @@ viz_persons_stats_bycompyear_diffs <-
        caption = "Dashed line: Comptition-specific average year-to-year difference percentage.")
 viz_persons_stats_bycompyear_diffs
 
-# later... ----
-persons %>%
-  group_by(comp) %>%
-  # summarise_stats_at("score", tidy = TRUE) %>%
-  summarise_stats(score, tidy = TRUE) %>%
-  ungroup()
-
+teproj::export_ext_png(
+  viz_persons_stats_bycompyear_diffs,
+  export = params$export_viz,
+  dir = params$dir_viz,
+  units = "in",
+  height = 8,
+  width = 8
+)
 
 persons_n <-
   persons %>%
@@ -489,8 +507,9 @@ persons_n
 
 n_top <- 20
 html_persons_n_top <-
-  persons %>%
-  create_kable(n = n_top)
+  persons_n %>%
+  filter(rnk <= n_top | str_detect(name, params$rgx_name_filt)) %>%
+  create_kable(n = Inf)
 
 # n_top_conf <- 10000
 n_top_conf <- nrow(persons_n)
@@ -529,16 +548,195 @@ viz_persons_n_top_byconf <-
        caption = "\"Tier\" of individuals ranked by count of competitions is emphasized by shading.")
 viz_persons_n_top_byconf
 
-# later... ----
-schools_elhabr <-
-  schools %>%
-  filter(school == "CLEMENS")
-schools_elhabr
+teproj::export_ext_png(
+  viz_persons_n_top_byconf,
+  export = params$export_viz,
+  dir = params$dir_viz,
+  units = "in",
+  height = 6,
+  width = 8
+)
 
-persons_elhabr <-
+persons %>%
+  correlate_rnks_by_at("prnk")
+persons %>%
+  correlate_rnks_by_at("n_defeat")
+
+pct_top_ingroup_diff_prnk <- 0.05
+n_ingroup_min <- 3
+persons_stats_byschool <-
   persons %>%
-  filter(name_last == "Elhabr")
-persons_elhabr
+  # filter(school == params$rgx_school_filt, year <= 2012, year >= 2011) %>%
+  group_by(comp, complvl, conf, year, school) %>%
+  mutate(n_ingroup = n()) %>%
+  filter(n_ingroup >= n_ingroup_min) %>%
+  mutate(ingroup_rnk = row_number(desc(score))) %>%
+  # filter(ingroup_rnk %in% c(1, 2)) %>%
+  # arrange(desc(ingroup_rnk)) %>%
+  # mutate(ingroup_diff = score - lag(score)) %>%
+  mutate(ingroup_score_other = (sum(score) - score)  / (n_ingroup - 1)) %>%
+  mutate(ingroup_diff = score - ingroup_score_other) %>%
+  # filter(ingroup_rnk == 1) %>%
+  # select(-ingroup_rnk) %>%
+  ungroup() %>%
+  # mutate(group_score = score - ingroup_diff) %>%
+  mutate(among_group_rnk = row_number(desc(ingroup_diff))) %>%
+  arrange(among_group_rnk)
+persons_stats_byschool
 
+set.seed(42)
+viz_comp_stats_byperson_byschool <-
+  persons_stats_byschool %>%
+  mutate(ingroup_diff_prnk = percent_rank(ingroup_diff)) %>%
+  mutate(ingroup_diff_toppct = if_else(ingroup_diff_prnk >= (1 - pct_top_ingroup_diff_prnk), T, F)) %>%
+  sample_frac(size = 0.05) %>%
+  # ggplot(aes(x = score, y = group_score)) +
+  ggplot(aes(x = score, y = ingroup_score_other)) +
+  geom_point(aes(color = ingroup_diff_toppct), alpha = 0.1) +
+  geom_point(
+    data =
+      persons_stats_byschool %>%
+      filter(str_detect(name, params$rgx_name_filt)),
+    aes(x = score, y = ingroup_score_other),
+    color = "blue",
+    size = 5,
+    shape = 18
+  ) +
+  scale_color_manual(values = c("black", "red")) +
+  geom_abline(
+    aes(intercept = 0, slope = 1),
+    color = "black",
+    linetype = "solid",
+    size = 2
+  ) +
+  geom_abline(
+    aes(
+      intercept = -quantile(ingroup_diff, 1 - pct_top_ingroup_diff_prnk, na.rm = T),
+      slope = 1
+    ),
+    color = "red",
+    size = 1,
+    linetype = "dashed"
+  ) +
+  labs(
+    x = "Individual Score",
+    y = "Average Score of Teammates",
+    title = "Distribution of Individual and Teammate Scores",
+    caption =
+      str_wrap(
+        paste0(
+          "Blue points highlight my personal scores. ",
+          sprintf("Red emphasizes top %.0f%% of individuals who \"carried\" ", 100 * pct_top_ingroup_diff_prnk),
+          "their teammates, according to differences in percent rank ",
+          "of difference in individual score and average of teammates scores. ",
+          sprintf("Only unique school-competitions observations having at least %.0f team members are considered.", n_ingroup_min)
+        ), 100
+      )
+  ) +
+  teplot::theme_te_facet() +
+  theme(legend.position = "none")
+viz_comp_stats_byperson_byschool
+
+teproj::export_ext_png(
+  viz_comp_stats_byperson_byschool,
+  export = params$export_viz,
+  dir = params$dir_viz,
+  units = "in",
+  height = 8,
+  width = 8
+)
+
+siblings_lax <-
+  persons %>%
+  get_siblings_at(cols_grp = c("name_last", "school", "city", "year"))
+
+siblings_lax_n <-
+  siblings_lax %>%
+  group_by(school, name_last, name_first_pair) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  distinct(school, name_last, n, .keep_all = TRUE) %>%
+  rank_and_arrange_at("n")
+siblings_lax_n
+
+html_siblings_lax_n <-
+  siblings_lax_n %>%
+  filter(rnk <= (n_top) | str_detect(name_last, params$rgx_name_last_filt)) %>%
+  create_kable(n = Inf)
+
+siblings <-
+  persons %>%
+  get_siblings_at()
+siblings
+
+siblings_n <-
+  siblings %>%
+  group_by(name_last, name_first_pair) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  distinct(name_last, n, .keep_all = TRUE) %>%
+  rank_and_arrange_at("n")
+siblings_n
+
+html_siblings_n <-
+  siblings_n %>%
+  filter(rnk <= (n_top) | str_detect(name_last, params$rgx_name_last_filt)) %>%
+  create_kable(n = Inf)
+
+siblings_prnk <-
+  siblings %>%
+  select(matches("^name|^prnk")) %>%
+  gather(prak_sum_type, value, matches("^prnk")) %>%
+  group_by(name_last, name_first_pair) %>%
+  summarise(sum = sum(value)) %>%
+  ungroup() %>%
+  distinct(name_last, sum, .keep_all = TRUE) %>%
+  rank_and_arrange_at("sum")
+siblings_prnk
+
+html_siblings_prnk <-
+  siblings_prnk %>%
+  filter(rnk <= (n_top) | str_detect(name_last, params$rgx_name_last_filt)) %>%
+  create_kable(n = Inf)
+
+persons_byschool <-
+  persons %>%
+  group_by(school, name) %>%
+  summarise(
+    cnt = n(),
+    prnk_sum = sum(prnk),
+    prnk_mean = mean(prnk),
+    n_defeat = sum(n_defeat)
+  ) %>%
+  ungroup() %>%
+  rank_and_arrange_at("prnk_sum")
+
+persons_byschool_filt <-
+  persons_byschool %>%
+  filter(str_detect(school, params$rgx_school_filt)) %>%
+  rank_and_arrange_at("prnk_sum")
+persons_byschool_filt
+
+html_persons_byschool_filt <-
+  persons_byschool_filt%>%
+  filter(rnk <= (n_top) | str_detect(name, params$rgx_name_filt)) %>%
+  mutate_if(is.numeric, funs(round(., 2))) %>%
+  create_kable(n = Inf)
+
+schools_filt <-
+  schools %>%
+  filter(str_detect(school, params$rgx_school_filt))
+schools_filt
+
+
+persons_filt <-
+  persons %>%
+  filter(str_detect(name, params$rgx_name_filt))
+persons_filt
+
+persons_filt_2 <-
+  persons %>%
+  filter(str_detect(name, params$rgx_name_last_filt))
+persons_filt_2
 
 save.image(file = params$path_analysis_image)

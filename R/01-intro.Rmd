@@ -78,9 +78,13 @@ are really the most "elite". State-wide and nation-wide standardized test scores
 certainly are the most common measure of school and student academic strength,
 [but they may not truly be the best]().
 
-### About the Data
+### About the Data [^source]
 
 To make some sense of the my analysis, the reader should be aware of the following details about the data.
+
++ The competition data was scraped from https://www.hpscience.net/ for all years from 2008 through 2017.
+The data is not listed in an extremely user-friendly format (in my opinion). Consequently, the "cleaned"
+data is imperfect in some ways.
 
 + The UIL categorizes schools into one of six "conferences". The conference labels
 range from `1A`, `2A`, ..., `6A`, where the increasing leading digit (i.e. `1`, `2`, etc.)
@@ -96,11 +100,8 @@ and, subsequently, winning a Region competiton results in a State competition ap
 conference, even as they advance.)
 
 + The UIL defines _32 total Districts_ in Texas, which are aggregated into _4 Regions_.
-(The geo-spatial data for the
-visual can be downloaded from
-https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer.
-"Fuzzy-joining" with the school names from the UIL data scraped from https://www.hpscience.net/ was
-used to identify the districts and regions.)
+(The source of the geo-spatial data is
+https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer.)
 
 
 ```{r viz_map_bycomplvl_grid}
@@ -115,9 +116,6 @@ The value of _n_ is dependent on the competition type. [^uil_rules]
 + There are 5 different academic competitions "types":
 _Calculator Applications_, _Computer Science_, _Mathematics_, _Number Sense_, and _Science_. [^all_competitions]
 
-+ I scaped data from https://www.hpscience.net/ for all years through the current year since 2008.
-The data is not listed in an extremely user-friendly format (in my opinion). Consequently, the "cleaned"
-data is imperfect in some ways. (For example
 
 [^uil_rules]:
 See the [UIL rules]() for more details.

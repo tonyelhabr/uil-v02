@@ -60,6 +60,9 @@ get_const <- function(sort = TRUE) {
       default_city = "unknown",
       default_complvl_num = 0,
       path_schools_geo_raw = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx"),
+      rgx_school_filt = "CLEMENS",
+      rgx_name_filt = "El.*[Hh]ab.*Ant",
+      rgx_name_last_filt = "El.*[Hh]ab",
       path_analysis_image = file.path("data", "analysis.RData")
     )
   if(sort) {

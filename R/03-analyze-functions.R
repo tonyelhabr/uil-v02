@@ -58,17 +58,18 @@ add_calc_cols <-
       mutate(advanced = ifelse(
         complvl == "State",
         as.logical(NA),
-        ifelse(!is.na(lead(complvl, 1)), TRUE, FALSE)
+        ifelse(!is.na(lead(complvl, 1)), T, F)
       )) %>%
       ungroup() %>%
       group_by(year, conf, complvl, complvl_num, comp_shortname, comp) %>%
       mutate(
         n_bycomp = n(),
-        rank = row_number(desc(score)),
-        prank = percent_rank(score)
+        rnk = row_number(desc(score)),
+        prnk = percent_rank(score)
       ) %>%
-      mutate(n_defeat = n_bycomp - rank) %>%
-      mutate(win = ifelse(rank == 1, TRUE, FALSE)) %>%
+      mutate(n_defeat = n_bycomp - rnk) %>%
+      mutate(w = ifelse(rnk == 1, T, F)) %>%
+      select(-rnk) %>%
       ungroup()
   }
 
@@ -341,4 +342,87 @@ visualize_persons_stats_bycompx_at <-
 # rescale01 <- function(x) {
 #   (x - min(x)) / (max(x) - min(x))
 # }
+
+correlate_rnks_by_at <-
+  function(data = NULL,
+           col = NULL,
+           cols_grp = c("name", "school", "conf")) {
+    stopifnot(is.character(col), length(col) == 1, length(intersect(names(data), col)) == 1)
+    stopifnot(is.character(cols_grp),
+              length(intersect(names(data), cols_grp)) == length(cols_grp))
+    data %>%
+      group_by(!!!syms(cols_grp)) %>%
+      summarise_at(vars(!!sym(col)), funs(mean, sum)) %>%
+      ungroup() %>%
+      mutate(rnk_sum = row_number(desc(sum)),
+             rnk_mean = row_number(desc(mean))) %>%
+      select_at(vars(starts_with("rnk_"))) %>%
+      corrr::correlate()
+  }
+
+get_siblings_at <-
+  function(data = NULL,
+           min = 2,
+           max = Inf,
+           cols_grp = c(
+             "name_last",
+             "school",
+             "city",
+             "year",
+             "conf",
+             "complvl",
+             "comp",
+             "complvl_num")) {
+
+    cols_grp_chr <- cols_grp
+    cols_grp <- syms(cols_grp)
+    data_proc <-
+      data %>%
+      group_by(!!!cols_grp) %>%
+      mutate(rnk_max = rank(name_last, ties.method = "max")) %>%
+      ungroup()
+
+    data_filt <-
+      data_proc %>%
+      filter(rnk_max >= min, rnk_max <= max)
+
+    ret <-
+      data_filt %>%
+      left_join(
+        data_filt,
+        by = cols_grp_chr,
+        suffix = c("", "_sibling")
+      ) %>%
+      filter(name_first != name_first_sibling) %>%
+      mutate(name_first_pair = paste0(name_first, " & ", name_first_sibling)) %>%
+      ungroup() %>%
+      select(name, name_first, name_last, name_first_sibling, everything()) %>%
+      # distinct(year, school, city, complvl, complvl_num, conf, comp, name_last, .keep_all = TRUE) %>%
+      arrange(name_last, name_first, school) %>%
+      select(name_first_pair, everything())
+
+    cols_drop <-
+      setdiff(c(names(data), "name_first_pair", "name_first_sibling"), names(ret))
+
+    ret <-
+      ret %>%
+      select(-one_of(cols_drop))
+    ret
+  }
+
+get_siblings_pair_at <-
+  function(data = NULL, min = 2, max = 2) {
+    get_siblings_at(
+      data = data,
+      min = min,
+      max = max
+    )
+  }
+
+# filter_rnk_or_rgx <-
+#   function(data = NULL, col_rnk, n_rnk = NULL, col_rgx = "name_last", rgx = NULL) {
+#     data %>%
+#       filter(!!sym(col_rnk) <= n_rnk | str_detect(!!sym(col_rgx), rgx))
+#   }
+
 

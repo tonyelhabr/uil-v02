@@ -76,13 +76,54 @@ students to compete in as many competition types as they desire, even if they ha
 not prepared for them whatsoever.
 
 Along these lines, note that there is a limit on the number of entrants
-per school in a given competition. This means that smaller schools are much less likely to ever
+per school in a given competition. This means that smaller schools are much less likely to
 have enough people to reach the per-school limit, so individuals at these schools
 are welcome to compete in as many competitions as they would like.
 
-Such a phenomenon
-might be made evident by lower scores (in aggregate) for conferences where participation
-by distinct individuals is greater. Nonetheless, this was not what 
+Such a phenomenon might be evident in lower scores (in aggregate) for conferences where participation
+by distinct individuals is greater. In fact, this is exactly what is observed.
+(The below visual was included as part of another visual before.)
+
+```{r viz_persons_n_top_byconf}
+viz_persons_stats_bycompconf
+```
+
+Now, I want to try to answer a question that may only be subjectively defined
+and quantified: Which individuals were most "dominant"?
+
+To do this, I assign a percent rank to individual placings in all
+competitions based on score relative to other scores in that competition. 
+I choose to use percent rank--which is a always a value between 0 and 1--because
+it inherently accounts for the
+wide range of number of competittors across all competitions. 
+For this context, a percent rank of 1 corresponds to the highest score in a given
+competition (for each unique year, competition type, and competition level), and, conversely,
+a value of 0 corresponds to the lowest score.
+
+I should note that I evaluated some other metrics for gauging individual
+success, including the total number
+of individuals defeated in competitions (i.e. "defeats"). 
+Percent rank based on score and number of defeats attempt to quantify the same underlying variable,
+but I think percent rank is a little more "natural" to interpret because
+it contextualizes number of competitors with its unit range (i.e. range from 0 to 1).
+By comparison, interpretation of number of defeats is less direct because
+the number of other competitors is not accounted directly.
+
+To generate a final set of ranks, one for each unique competitor,
+based on the percent ranks for individual competitions,
+I simply sum up the percent ranks for each individual.
+
+The sum is used instead of an average--which may also be considered a valid
+means of aggregating the values for each individual--because rankings based on averages
+--and inferences made upon them--are sensitive
+to individuals who do not compete in many competitions, yet place very well in them.
+A final ranking based on a summed value does not suffer from this pitfall,
+although it can be sensitive to the sample size of each participant. (i.e. 
+An individual might partipate in a high number of competitions and
+under-perform relative to the average in all of them, yet their final ranking
+(based on summed percent ranks) might indicate that they are an above-average performer.)
+
+This is not how I quantify "domination".
 
 
 
