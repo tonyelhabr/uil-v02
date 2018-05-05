@@ -1,25 +1,42 @@
 
 stopifnot(params$clean)
 
-schools_scrape <- params$path_schools_scrape %>% import_cleanly()
-persons_scrape <- params$path_persons_scrape %>% import_cleanly()
-# schools_scrape %>% filter(is.na(name))
+schools_scrape <-
+  params$path_schools_scrape %>%
+  teproj::import_path_cleanly()
+persons_scrape <-
+  params$path_persons_scrape %>%
+  teproj::import_path_cleanly()
+
 schools_clean <-
   schools_scrape %>%
-  clean_scrape_data(params = params)
+  clean_scrape_data(params = params) %>%
+  add_calc_cols_by_at()
+
 persons_clean <-
   persons_scrape %>%
   clean_scrape_data(params = params) %>%
-  filter(!is.na(name))
+  filter(!is.na(name)) %>%
+  add_calc_cols_by_at() %>%
+  add_name_cols_at() %>%
+  filter(!is.na(name)) %>%
+  select(name, name_first, name_last, everything())
 
-if (params$export_data) {
-  readr::write_csv(schools_clean, params$path_schools_clean)
-  readr::write_csv(persons_clean, params$path_persons_clean)
-}
+schools_clean %>%
+  teproj::export_path(
+    path = params$path_schools_clean,
+    export = params$export_data
+  )
+
+persons_clean %>%
+  teproj::export_path(
+    path = params$path_persons_clean,
+    export = params$export_data
+  )
 
 schools_geo_raw <-
   params$path_schools_geo_raw %>%
-  import_cleanly()
+  teproj::import_path_cleanly()
 
 schools_geo_clean <-
   schools_geo_raw %>%
@@ -40,9 +57,11 @@ schools_geo_clean <-
   distinct()
 schools_geo_clean
 
-if(params$export_data) {
-  readr::write_csv(schools_geo_clean, params$path_schools_geo_clean)
-}
+schools_geo_clean %>%
+  teporj::export_path(
+    path = params$path_schools_geo_clean
+    export = params$export_data
+  )
 
 schools_geo_join <-
   schools_clean %>%
@@ -74,7 +93,9 @@ schools_geo_join <-
   schools_geo_join %>%
   do_get_schools_geo_bycomplvl(schools_clean)
 
-if(params$export_data) {
-  readr::write_csv(schools_geo_join, params$path_schools_geo_join)
-}
+schools_geo_join %>%
+  teporj::export_path(
+    path = params$path_schools_geo_join
+    export = params$export_data
+  )
 

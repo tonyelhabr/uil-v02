@@ -2,12 +2,15 @@
 rm(list = ls())
 pacman::p_unload(pacman::p_loaded(), character.only = TRUE)
 
-library("dplyr")
+# library("dplyr")
+# library("rlang")
+# library("stringr")
+# library("tidyr")
+# library("ggplot2")
+library("tidyverse")
 library("rlang")
-library("stringr")
-library("tidyr")
-library("ggplot2")
 library("teplot")
+library("teproj")
 
 paths_functions <-
   list.files(
@@ -23,7 +26,3 @@ params <- get_params()
 
 # params <- get_params()
 # writeLines(yaml::as.yaml(params ), "_params.yml")
-
-purrr::flatten(params)
-params$complvls_info_list %>% tibble::enframe()
-sort_named_list(params)
