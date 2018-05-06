@@ -7,7 +7,7 @@ output:
     toc: false
 ---
 
-```{r setup, echo = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
   # echo = TRUE,
@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r load}
+```{r load, include = FALSE}
 source(file.path("R", "00-config.R"))
 # load(params$path_analysis_image)
 # schools <-
@@ -154,6 +154,27 @@ by distinct individuals is greater. In fact, this is exactly what is observed.
 viz_persons_stats_bycompconf
 ```
 
+
+```{r}
+persons_stats <-
+  persons %>%
+  add_persons_stats_cols_by_at()
+
+persons_stats %>% count(n_advanced) %>% arrange(desc(n_advanced))
+persons_stats %>% count(n_state) %>% arrange(desc(n_state))
+
+html_persons_stats_filt <-
+  persons_stats %>%
+  select(-n_advanced, -n_state) %>%
+  create_kable_filt_at(
+    params = params,
+    col_rgx = "name",
+  )
+
+```
+
+
+
 ## Invidual Performance
 
 Now, I want to try to answer a somewhat ambiguous question:
@@ -278,7 +299,7 @@ independent of the competition setting, I think that it is another interesting w
 evaluating skill.
 
 ```{r persons_stats_byschool, include = FALSE}
-pct_top_ingroup_diff_prnk <- 0.05
+
 n_ingroup_min <- 3
 persons_stats_byschool <-
   persons %>%
@@ -289,8 +310,6 @@ persons_stats_byschool <-
   mutate(ingroup_rnk = row_number(desc(score))) %>%
   mutate(ingroup_score_other = (sum(score) - score)  / (n_ingroup - 1)) %>%
   mutate(ingroup_diff = score - ingroup_score_other) %>%
-  # filter(ingroup_rnk == 1) %>%
-  # select(-ingroup_rnk) %>%
   ungroup() %>%
   mutate(among_group_rnk = row_number(desc(ingroup_diff))) %>%
   arrange(among_group_rnk)
@@ -299,6 +318,7 @@ persons_stats_byschool
 
 ```{r viz_comp_stats_byperson_byschool, include = FALSE, fig.show = "asis"}
 set.seed(42)
+pct_top_ingroup_diff_prnk <- 0.05
 viz_comp_stats_byperson_byschool <-
   persons_stats_byschool %>%
   mutate(ingroup_diff_prnk = percent_rank(ingroup_diff)) %>%
@@ -353,7 +373,6 @@ viz_comp_stats_byperson_byschool <-
   theme(legend.position = "none")
 viz_comp_stats_byperson_byschool
 ```
-
 
 
 

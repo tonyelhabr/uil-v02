@@ -1,0 +1,203 @@
+---
+author: ""
+date: ""
+title: ""
+output:
+  html_document:
+    toc: false
+---
+
+```{r setup, include = FALSE}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+knitr::opts_chunk$set(
+  # echo = TRUE,
+  echo = FALSE,
+  # cache = TRUE,
+  # include = FALSE,
+  # results = "markdown",
+  # results = "hide",
+  fig.align = "center",
+  # fig.show = "asis",
+  fig.width = 10,
+  fig.height = 10,
+  # out.width = 6,
+  # out.height = 6,
+  warning = FALSE,
+  message = FALSE
+)
+
+```
+
+```{r load include = FALSE}
+source(file.path("R", "00-config.R"))
+# load(params$path_analysis_image)
+schools <-
+  params$path_schools_clean %>%
+  teproj::import_path_cleanly()
+
+# persons <-
+#   params$path_persons_clean %>%
+#   teproj::import_path_cleanly()
+
+```
+
+```{r visualize_map_tier3_at, include = FALSE}
+add_tier3_lab_cols_at <-
+  function(data = NULL,
+           col = "rnk",
+           col_out_chr = "rnk_tier_lab",
+           tier_base = 3,
+           n_tiers = 3,
+           factor = TRUE,
+           add_col_numeric = TRUE,
+           col_out_num = "rnk_tier") {
+    tier_max <- tier_base * 10 ^ (n_tiers - 1L - 1L)
+    if (tier_max > nrow(data)) {
+      warning("Too many tiers specified given rows in `data`.", call. = FALSE)
+      return(data)
+    }
+    tiers <-
+      tier_base * (10 ^ seq(1L - 1L, n_tiers - 1L - 1L, by = 1L))
+    tier_lab_prefixes <-
+      c(rep("Top ", n_tiers - 1L), "Outside top ")
+    tier_labs <- paste0(tier_lab_prefixes, c(tiers, rev(tiers)[1]))
+
+    col <- sym(col)
+    col_out_chr <- sym(col_out_chr)
+    ret <-
+      data %>%
+      mutate(
+        !!col_out_chr :=
+          case_when(
+            !!col <= tiers[1] ~ tier_labs[1],
+            !!col <= tiers[2] ~ tier_labs[2],
+            TRUE ~ tier_labs[3]
+          )
+      )
+
+    # NOTE: Factor first, then unfactor later if necessary.
+    ret <-
+      ret %>%
+      mutate_at(vars(!!col_out_chr), funs(factor(., levels = rev(tier_labs))))
+
+    if (add_col_numeric) {
+      col_out_num <- sym(col_out_num)
+      ret <-
+        ret %>%
+        mutate(!!col_out_num := as.integer(!!col_out_chr))
+    }
+
+    if (!factor) {
+      ret <-
+        ret %>%
+        mutate_at(vars(!!col_out), funs(as.character(.)))
+    }
+    ret
+  }
+
+visualize_map_tier3_at <-
+  function(data = NULL,
+           col = "rnk",
+           tier_base = 3,
+           n_tier = 3,
+           add_labels = TRUE,
+           col_label = "school") {
+    data_map <-
+      # schools_stats %>%
+      # inner_join(schools_geo_join %>% distinct(school, county, lat, lon), by = c("school")) %>%
+      data %>%
+      rank_arrange_at(col) %>%
+      add_tier3_lab_cols_at(tier_base = tier_base, n_tier = n_tier)
+
+    rnk_tier_labs <- levels(data_map$rnk_tier_lab)
+
+    data_tier1 <-
+      data_map %>%
+      filter(rnk_tier_lab == rev(rnk_tier_labs)[1])
+    data_tier2 <-
+      data_map %>%
+      filter(rnk_tier_lab == rev(rnk_tier_labs)[2])
+    data_tier3 <-
+      data_map %>%
+      filter(rnk_tier_lab == rev(rnk_tier_labs)[3])
+    ret <-
+      teplot::create_map_base_tx() +
+      # geom_point(
+      #   data = data_map,
+      #   aes(
+      #     x = lon,
+      #     y = lat,
+      #     color = rnk_tier_lab,
+      #     size = rnk_tier,
+      #     alpha = rnk_tier,
+      #     group = ""
+      #   )
+      # ) +
+    geom_point(
+      data = data_tier3,
+      aes(
+        x = lon,
+        y = lat,
+        color = rnk_tier_lab,
+        group = ""
+      ),
+      size = 1,
+      alpha = 0.5
+    ) +
+      geom_point(
+        data = data_tier2,
+        aes(
+          x = lon,
+          y = lat,
+          color = rnk_tier_lab,
+          group = ""
+        ),
+        size = 3,
+        alpha = 0.75
+      ) +
+      geom_point(
+        data = data_tier1,
+        aes(
+          x = lon,
+          y = lat,
+          color = rnk_tier_lab,
+          group = ""
+        ),
+        size = 5,
+        alpha = 1
+      ) +
+      scale_alpha_continuous(range = c(0.5, 1)) +
+      # scale_radius(range = c(1, 6)) +
+      # scale_size_area(max_size = 6) +
+      scale_color_manual(values = c("grey", "blue", "cyan")) +
+      theme(legend.position = "bottom")
+
+    if (add_labels) {
+      ret <-
+        ret +
+        ggrepel::geom_label_repel(
+          data = data_tier1,
+          aes(
+            x = lon,
+            y = lat,
+            label = school,
+            group = ""
+          )
+        )
+      # ggrepel::geom_label_repel(
+      #   data = data_tier1,
+      #   aes_string(
+      #     x = "lon",
+      #     y = "lat",
+      #     label = col_label,
+      #     group = ""
+      #   )
+      # )
+
+    }
+
+    ret
+  }
+```
+
+

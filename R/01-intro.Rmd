@@ -7,7 +7,7 @@ output:
     toc: false
 ---
 
-```{r setup, echo = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
   # echo = TRUE,
@@ -28,8 +28,12 @@ knitr::opts_chunk$set(
 
 ```
 
+```{r funcs_general, include = FALSE}
 
-```{r load}
+```
+
+
+```{r load, include = FALSE}
 source(file.path("R", "00-config.R"))
 # load(params$path_analysis_image)
 
@@ -211,11 +215,11 @@ In this series, I plan to investigate the following topics:
 
 + The relationships among the competition years, types, levels
 
-+ Individual performance
++ Individual performance (including myself)
 
-+ School performance
++ School performance (including my high school)
 
-+ Personal performance
++ Miscellaneous questions, such as sibling performance
 
 Performance evaluation relies primarily upon
 test scores (from which other useful metrics may be derived, such as advancement).

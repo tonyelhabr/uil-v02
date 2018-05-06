@@ -9,84 +9,9 @@ persons <-
   teproj::import_path_cleanly()
 
 # lax version is new ----
-siblings_lax <-
-  persons %>%
-  get_siblings_by_at(cols_grp = c("name_last", "school", "city", "year"))
 
-siblings_lax_n <-
-  siblings_lax %>%
-  group_by(school, name_last, name_first_pair) %>%
-  summarise(n = n()) %>%
-  ungroup() %>%
-  distinct(school, name_last, n, .keep_all = TRUE) %>%
-  rank_arrange_at("n")
-siblings_lax_n
-
-html_siblings_lax_n <-
-  siblings_lax_n %>%
-  create_kable_filt_at(
-    params = params,
-    col_rgx = "name_last",
-  )
-
-siblings <-
-  persons %>%
-  get_siblings_by_at()
-siblings
-
-siblings_n <-
-  siblings %>%
-  group_by(name_last, name_first_pair) %>%
-  summarise(n = n()) %>%
-  ungroup() %>%
-  distinct(name_last, n, .keep_all = TRUE) %>%
-  rank_arrange_at("n")
-siblings_n
-
-html_siblings_n <-
-  siblings_n %>%
-  create_kable_filt_at(
-    params = params,
-    col_rgx = "name_last",
-  )
-
-siblings_prnk <-
-  siblings %>%
-  select(matches("^name|^prnk")) %>%
-  gather(prak_sum_type, value, matches("^prnk")) %>%
-  group_by(name_last, name_first_pair) %>%
-  summarise(sum = sum(value)) %>%
-  ungroup() %>%
-  distinct(name_last, sum, .keep_all = TRUE) %>%
-  rank_arrange_at("sum")
-siblings_prnk
-
-html_siblings_prnk <-
-  siblings_prnk %>%
-  create_kable_filt_at(
-    params = params,
-    col_rgx = "name_last",
-  )
 
 # old version: comp_rank_byschool_byperson ----
-persons_stats <-
-  persons %>%
-  add_persons_stats_cols_by_at()
-
-# persons_stats_filt <-
-#   persons_stats %>%
-#   filter(str_detect(school, params$rgx_school_filt))
-# persons_stats %>% filter_rnk_or_rgx_at(params = params, col_rnk = "prnk_sum", col_rgx = "school")
-persons_stats %>% count(n_advanced) %>% arrange(desc(n_advanced))
-persons_stats %>% count(n_state) %>% arrange(desc(n_state))
-
-html_persons_stats_filt <-
-  persons_stats %>%
-  select(-n_advanced, -n_state) %>%
-  create_kable_filt_at(
-    params = params,
-    col_rgx = "name",
-  )
 
 # old version: comp_rank_byschool ----
 schools_stats <-
