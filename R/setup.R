@@ -147,6 +147,27 @@ schools_tea %>%
   filter(str_detect(school, "CLEMENS|STEELE II")) %>%
   spread(year, total)
 
+schools_tea_cors_byyear <-
+  schools_tea %>%
+  # filter(test == "SAT") %>%
+  distinct(test, year, school, .keep_all = TRUE) %>%
+  filter(!is.na(total)) %>%
+  unite(test_school, test, school) %>%
+  widyr::pairwise_cor(
+    # feature = school,
+    feature = test_school,
+    item = year,
+    value = total
+  )
+  # spread(item2, correlation) %>%
+
+schools_tea_cors_byyear %>%
+  ggplot(aes(x = item1, y = item2, fill = correlation)) +
+  geom_tile() +
+  geom_text(aes(label = round(correlation, 2))) +
+  # scale_fill_gradient2(low = "red", high = "cyan", mid = "white", midpoint = 0) +
+  teplot::theme_te()
+
 # schools_tea_join_0 <-
 #   schools_distinct %>%
 #   join_fuzzily(schools_tea, how = "left", suffix_x = "", suffix_y = "_sat")
