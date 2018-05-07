@@ -7,48 +7,6 @@ scale_fill_set1 <- function() {
   scale_fill_brewer(palette = "Set1")
 }
 
-rank_arrange_at <-
-  function(data = NULL,
-           col = "n",
-           col_out = "rnk") {
-    col <- rlang::sym(col)
-    col_out <- rlang::sym(col_out)
-    data %>%
-      mutate(!!col_out := row_number(desc(!!col))) %>%
-      arrange(!!col_out) %>%
-      select(!!col_out, everything())
-  }
-
-
-rank_arrange <-
-  function(data, col, ...) {
-    # stopifnot(!missing(col), !missing(col_out))
-    rank_arrange_at(data = data,
-                    col = quo_text(enquo(col)),
-                    ...)
-  }
-
-count_arrange_desc <-
-  function(data = NULL, col) {
-    col <- enquo(col)
-    data %>%
-      count(!!col) %>%
-      arrange(desc(!!col))
-  }
-
-group_arrange_desc <-
-  function(data = NULL, col) {
-    col <- enquo(col)
-    data %>%
-      group_by(!!col) %>%
-      arrange(desc(!!col)) %>%
-      ungroup()
-  }
-
-# rescale01 <- function(x) {
-#   (x - min(x)) / (max(x) - min(x))
-# }
-
 validate_nm <-
   function(data = NULL, nm = NULL) {
     stopifnot(length(intersect(names(data), nm)) == 1)
@@ -85,47 +43,58 @@ create_kable_filt_at <-
 
   }
 
-add_n_state_col <-
-  function(data = NULL) {
-    data %>%
-      mutate(n_state = ifelse(complvl == "Region" &
-                                advanced == 1L, 1L, 0L))
-  }
-
 add_stats_cols_by_at <-
   function(data = NULL,
-           cols_grp = c("school"),
-           col_rnk = "prnk_sum") {
-    data %>%
-      add_n_state_col() %>%
+           cols_grp = NULL,
+           col_rnk = "prnk_sum",
+           rank_all = FALSE,
+           ...) {
+    ret <-
+      data %>%
       group_by(!!!syms(cols_grp)) %>%
       summarise(
         n = n(),
         prnk_sum = sum(prnk),
         prnk_mean = mean(prnk),
-        n_defeat = sum(n_defeat),
-        n_advanced = sum(advanced),
-        n_state = sum(n_state)
+        n_defeat_sum = sum(n_defeat),
+        n_defeat_mean = mean(n_defeat),
+        n_advanced_sum = sum(advanced),
+        n_state_sum = sum(n_state)
       ) %>%
-      ungroup() %>%
-      rank_arrange_at(col_rnk)
+      ungroup()
+    if(!rank_all) {
+      ret <-
+        ret %>%
+        tetidy::rank_arrange_at(col_rnk, ...)
+    } else {
+      cols_rnk <-
+        setdiff(names(ret), names(data))
+      ret <-
+        ret %>%
+        mutate_at(vars(!!!syms(cols_rnk)), funs(rnk = row_number(desc(.))))
+    }
+    ret
   }
 
 add_persons_stats_cols_by_at <-
   function(data = NULL,
-           cols_grp = c("name", "school"),
+           cols_grp = c("name", "school", "city"),
+           col_rnk = "prnk_sum",
            ...) {
     add_stats_cols_by_at(data = data,
                          cols_grp = cols_grp,
+                         col_rnk = col_rnk,
                          ...)
   }
 
 add_schools_stats_cols_by_at <-
   function(data = NULL,
-           cols_grp = c("school"),
+           cols_grp = c("school", "city"),
+           col_rnk = "prnk_sum",
            ...) {
     add_stats_cols_by_at(data = data,
                          cols_grp = cols_grp,
+                         col_rnk = col_rnk,
                          ...)
   }
 

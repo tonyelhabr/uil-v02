@@ -41,6 +41,51 @@ schools <-
 
 ```
 
+```{r schools_stats, include = FALSE}
+schools_stats <-
+  schools %>%
+  add_schools_stats_cols_by_at(cols_grp = c("school"))
+
+schools_stats %>% tetidy::count_arrange(n_state)
+
+html_schools_stats_filt <-
+  schools_stats %>%
+  mutate_if(is.numeric, funs(round(., 2))) %>%
+  create_kable_filt_at(
+    params = params,
+    col_rgx = "school"
+  )
+```
+
+```{r html_schools_stats, echo = FALSE, include = FALSE}
+schools_stats %>%
+  mutate_if(is.numeric, funs(round(., 2))) %>%
+  create_kable_filt_at(
+    params = params,
+    col_rgx = "school",
+  )
+```
+
+```{r schools_stats_byyear, include = FALSE}
+schools_stats_byyear <-
+  schools %>%
+  add_schools_stats_cols_by_at(
+    cols_grp = c("school", "year")
+  )
+schools_stats_byyear
+
+```
+
+```{r html_schools_stats_byyear, echo = FALSE, include = TRUE}
+schools_stats_byyear %>%
+  mutate_if(is.numeric, funs(round(., 2))) %>%
+  create_kable_filt_at(
+    params = params,
+    col_rgx = "school"
+  )
+```
+
+
 ```{r visualize_map_tier3_at, include = FALSE}
 add_tier3_lab_cols_at <-
   function(data = NULL,
@@ -106,7 +151,7 @@ visualize_map_tier3_at <-
       # schools_stats %>%
       # inner_join(schools_geo_join %>% distinct(school, county, lat, lon), by = c("school")) %>%
       data %>%
-      rank_arrange_at(col) %>%
+      tetidy::rank_arrange_at(col) %>%
       add_tier3_lab_cols_at(tier_base = tier_base, n_tier = n_tier)
 
     rnk_tier_labs <- levels(data_map$rnk_tier_lab)
@@ -200,4 +245,31 @@ visualize_map_tier3_at <-
   }
 ```
 
+```{r viz_map_tier3, echo = FALSE, include = TRUE, fig.show = "asis"}
+viz_map_tier3 <-
+  schools_stats %>%
+  inner_join(
+    schools_geo_join %>%
+      distinct(school, county, lat, lon),
+    by = c("school")
+  ) %>%
+  visualize_map_tier3_at(
+    col = "prnk_sum",
+    add_labels = TRUE,
+    col_label = "school"
+  ) +
+  theme(
+    panel.background = element_blank()
+  ) +
+  labs(
+    title = "Most Dominant Schools",
+    caption =
+      str_wrap(
+        paste0(
+          "Dominance is evaluated according to total percent rank."
+        ), 80
+      )
+  )
+viz_map_tier3
+```
 

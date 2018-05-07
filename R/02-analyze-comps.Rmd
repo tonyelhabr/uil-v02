@@ -75,7 +75,7 @@ summarise_n_bygrps <-
         ungroup()
     }
     ret %>%
-      rank_arrange_at(col = "n")
+      tetidy::rank_arrange_at("n")
   }
 
 summarise_n_bycomplvl <-
@@ -114,7 +114,7 @@ summarise_n_bycompcomplvlconf <-
         cols_grp2 = c("complvl", "comp", "conf")
       ) %>%
       group_by(complvl, comp) %>%
-      rank_arrange_at() %>%
+      tetidy::rank_arrange_at() %>%
       ungroup() %>%
       arrange(comp, complvl, rnk)
   }
@@ -442,7 +442,7 @@ summarise_stats_score_by_at <-
   function(data = NULL,
            col = "score",
            cols_grp = NULL) {
-    teproj::summarise_stats_by_at(data = data,
+    tetidy::summarise_stats_by_at(data = data,
                                   col = col,
                                   cols_grp = cols_grp)
   }

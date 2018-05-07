@@ -52,7 +52,7 @@ persons_n <-
   group_by(name, school, conf) %>%
   summarise(n = n()) %>%
   ungroup() %>%
-  rank_arrange_at(col = "n")
+  tetidy::rank_arrange_at("n")
 persons_n
 
 html_persons_n_top <-
@@ -83,7 +83,7 @@ persons_n_top_byconf <-
   group_by(conf) %>%
   summarise(n = n()) %>%
   ungroup() %>%
-  rank_arrange_at(col = "n")
+  tetidy::rank_arrange_at("n")
 persons_n_top_byconf
 
 html_persons_n_top_byconf <-
@@ -147,15 +147,29 @@ have enough people to reach the per-school limit, so individuals at these school
 are welcome to compete in as many competitions as they would like.
 
 Such a phenomenon might be evident in lower scores (in aggregate) for conferences where participation
-by distinct individuals is greater. In fact, this is exactly what is observed.
-(The below visual was included as part of another visual before.)
+by distinct individuals is greater. In fact, this is exactly what is observed. [^previous]
 
-```{r viz_persons_n_top_byconf}
+[^previous]:
+See a separate write-up for this visual.
+
+```{r viz_persons_n_top_byconf, eval = FALSE}
+# TODO: Figure out a good way to include the previously generated visual.
 viz_persons_stats_bycompconf
 ```
 
+So what about people's scores? Who did best according to score?
+In order to simplify the data, let's look at a couple of statistics
+based on score, aggregating across all scores for each individual.
+In particular, let's look at average and sum of placing percent rank (`prnk`) and of
+competitors defeated (`n_defeat`). [^defeat]
 
-```{r}
+[^defeat]:
+Competitors defeated is defined as 
+the number of scores less that that of a given individual for a unique compeition,
+and a unique competition is defined as a unique combination of 
+year, competition level, and competition type.
+
+```{r persons_stats, include = FALSE}
 persons_stats <-
   persons %>%
   add_persons_stats_cols_by_at()
@@ -163,16 +177,27 @@ persons_stats <-
 persons_stats %>% count(n_advanced) %>% arrange(desc(n_advanced))
 persons_stats %>% count(n_state) %>% arrange(desc(n_state))
 
+prettify_nums_for_kable <-
+  function(data = NULL) {
+    data %>%
+      mutate_if(is.numeric, funs(round(., 2))) # %>% 
+      # mutate_if(is.numeric, funs(scales::comma)) 
+  }
+
 html_persons_stats_filt <-
   persons_stats %>%
   select(-n_advanced, -n_state) %>%
+  prettify_nums_for_kable() %>% 
   create_kable_filt_at(
     params = params,
-    col_rgx = "name",
+    col_rgx = "name"
   )
 
 ```
 
+```{r html_persons_stats_filt, echo = FALSE, include = TRUE}
+html_persons_stats_filt
+```
 
 
 ## Invidual Performance
