@@ -12,16 +12,16 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
   # echo = TRUE,
   echo = FALSE,
-  # cache = TRUE,
+  cache = TRUE,
   # include = FALSE,
   # results = "markdown",
   # results = "hide",
   fig.align = "center",
   # fig.show = "asis",
-  fig.width = 10,
-  fig.height = 10,
-  # out.width = 6,
-  # out.height = 6,
+  fig.width = 7,
+  fig.height = 7,
+  # out.width = 7,
+  # out.height = 7,
   warning = FALSE,
   message = FALSE
 )
@@ -29,58 +29,87 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load include = FALSE}
-source(file.path("R", "00-config.R"))
-# load(params$path_analysis_image)
-schools <-
-  params$path_schools_clean %>%
+source(file.path("R", "config.R"))
+schools_uil <-
+  config$path_schools_uil %>%
   teproj::import_path_cleanly()
 
-# persons <-
-#   params$path_persons_clean %>%
+# persons_uil <-
+#   config$path_persons_uil %>%
 #   teproj::import_path_cleanly()
 
 ```
 
+Having investigated individuals elsewhere, let's now take a look at the schools.
+
+__NOTE:__
+<i>
+Although began the examinations of competitions and individuals by looking at
+volume of participation (to provide context), 
+I'll skip an analogous discussion here
+because the participation of schools is shown indirectly through
+those analyses.)
+</i>
+
+## School Scores
+
+Let's begin by looking at some of the same metrics shown for invidual students,
+but aggregated across all students for each school. In order to give the reader
+some insight into school performance, I'll rank and show schools by a singular metric of performance
+To be consistent,
+I'll use the same
+metric used for ranking the invdividuals--summed percentile rank of scores (`prnk_sum`).
+
+__NOTE:__
+<i>
+For the same reason stated before for showing my own scores among the individuals,
+I'll include the numbers for my high school ("CLEMENS") in applicable contexts.
+</i>
+
 ```{r schools_stats, include = FALSE}
 schools_stats <-
-  schools %>%
-  add_schools_stats_cols_by_at(cols_grp = c("school"))
-
+  schools_uil %>%
+  add_schools_stats_cols_by_at(
+    cols_grp = c("school")
+  )
 schools_stats %>% tetidy::count_arrange(n_state)
+```
 
+```{r html_schools_stats_filt, echo = FALSE, include = TRUE}
 html_schools_stats_filt <-
   schools_stats %>%
   mutate_if(is.numeric, funs(round(., 2))) %>%
   create_kable_filt_at(
-    params = params,
+    config = config,
     col_rgx = "school"
   )
+html_schools_stats_filt
 ```
 
-```{r html_schools_stats, echo = FALSE, include = FALSE}
-schools_stats %>%
-  mutate_if(is.numeric, funs(round(., 2))) %>%
-  create_kable_filt_at(
-    params = params,
-    col_rgx = "school",
-  )
-```
+Admittedly, there's not a lot of insight to extract from this summary regarding
+individual schools. Nonetheless, it provides some useful context regarding
+the magnitude of performance metric values aggregated at the school level.
+
+To begin creating some insight into this list of top-performing schools,
+let's break down school performance by year. Also,
+let's combine the performance metric values
+with coordinate data to visualize where the best schools are.
 
 ```{r schools_stats_byyear, include = FALSE}
 schools_stats_byyear <-
-  schools %>%
+  schools_uil %>%
   add_schools_stats_cols_by_at(
     cols_grp = c("school", "year")
   )
 schools_stats_byyear
-
 ```
 
-```{r html_schools_stats_byyear, echo = FALSE, include = TRUE}
-schools_stats_byyear %>%
+```{r html_schools_stats_byyear, echo = FALSE, include = TRUE, eval = FALSE}
+html_schools_stats_byyear <-
+  schools_stats_byyear %>%
   mutate_if(is.numeric, funs(round(., 2))) %>%
   create_kable_filt_at(
-    params = params,
+    config = config,
     col_rgx = "school"
   )
 ```
@@ -149,7 +178,7 @@ visualize_map_tier3_at <-
            col_label = "school") {
     data_map <-
       # schools_stats %>%
-      # inner_join(schools_geo_join %>% distinct(school, county, lat, lon), by = c("school")) %>%
+      # inner_join(schools_nces_join %>% distinct(school, county, lat, lon), by = c("school")) %>%
       data %>%
       tetidy::rank_arrange_at(col) %>%
       add_tier3_lab_cols_at(tier_base = tier_base, n_tier = n_tier)
@@ -249,7 +278,7 @@ visualize_map_tier3_at <-
 viz_map_tier3 <-
   schools_stats %>%
   inner_join(
-    schools_geo_join %>%
+    schools_nces_join %>%
       distinct(school, county, lat, lon),
     by = c("school")
   ) %>%
@@ -272,4 +301,9 @@ viz_map_tier3 <-
   )
 viz_map_tier3
 ```
+
+We saw elsewhere that there is no
+significant temporal trend for competititon types or competition level, but is
+there one for school?
+
 

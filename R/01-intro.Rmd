@@ -34,11 +34,11 @@ knitr::opts_chunk$set(
 
 
 ```{r load, include = FALSE}
-source(file.path("R", "00-config.R"))
-# load(params$path_analysis_image)
+source(file.path("R", "config.R"))
+# load(config$path_analysis_image)
 
-schools_geo_join <-
-  params$path_schools_geo_join %>%
+schools_nces_join <-
+  config$path_schools_uil_nces_join %>%
   teproj::import_path_cleanly()
 ```
 
@@ -63,7 +63,7 @@ __NOTE:__
 
 This is part of a series of write-ups discussing my findings of
 [Texas high school academic University Interscholastic Scholarship (UIL) competitions](http://www.uiltexas.org/academics).
-See the first write-up [here](/posts/2018-05-13-analysis-texas-high-schools-academics-r).
+See the first write-up [here](/posts/2018-05-13-analysis-texas-high-schools_uil-academics-r).
 
 To keep this and the other write-ups concise and to focus reader attention on the content,
 I have decided not to show the underlying code
@@ -79,14 +79,14 @@ think is notable in some way.
 Ever since I finished high school in 2012, I've wanted to look back and evaluate my
 performance in the academic [University Interscholastic League](http://www.uiltexas.org/) (UIL)
 competitions that I competed in with historical results.
-(To provide some background, most public high schools are registered in 
+(To provide some background, most public high schools_uil are registered in 
 the [University Interscholastic League](http://www.uiltexas.org/) (UIL), which 
 "exists to provide educational extracurricular academic, athletic, and music contests".
 For those familiar with the [National Collegiate Athletic Association](https://www.ncaa.com/) (NCAA),
 the UIL serves an analogous role for Texas high school extracurricular activities.)
 
 Aside from my own self-interest in the historical results in these competitions,
-I think that this analysis can provide some insight into which schools (and individual students)
+I think that this analysis can provide some insight into which schools_uil (and individual students)
 are really the most "elite". State-wide and nation-wide standardized test scores
 certainly are the most common measure of school and student academic strength,
 [but they may not truly be the best]().
@@ -99,17 +99,17 @@ To make some sense of the my analysis, the reader should be aware of the followi
 The data is not listed in an extremely user-friendly format (in my opinion). Consequently, the "cleaned"
 data is imperfect in some ways.
 
-+ The UIL categorizes schools into one of six "conferences". The conference labels
++ The UIL categorizes schools_uil into one of six "conferences". The conference labels
 range from 1A, 2A, ..., 6A, where the increasing leading digit (i.e. 1, 2, etc.)
 generally corresponds to increasing school size.
 
-+ Schools only compete against other schools in their conference.
++ Schools only compete against other schools_uil in their conference.
 
 + The UIL defines 3 levels of competition (in order of "difficulty"): _District_, _Region_, and _State_.
 These are listed in order of "difficulty". That is, 
 Winning a District competitions, results in a Region competition appearance,
 and, subsequently, winning a Region competiton results in a State competition appearance.
-(Keep in mind that schools still only compete against other schools in their same
+(Keep in mind that schools_uil still only compete against other schools_uil in their same
 conference, even as they advance.)
 
 + The UIL defines _32 total Districts_ in Texas, which are aggregated into _4 Regions_.
@@ -157,7 +157,7 @@ lab_caption_map <-
     60)
 
 viz_map_byregion <-
-  schools_geo_join %>%
+  schools_nces_join %>%
   filter(complvl == "Region") %>%
   visualize_map_bycomplvl() +
   guides(fill = guide_legend(title = "Region", nrow = 1, byrow = FALSE)) +
@@ -166,7 +166,7 @@ viz_map_byregion <-
 viz_map_byregion
 
 viz_map_bydistrict <-
-  schools_geo_join %>%
+  schools_nces_join %>%
   filter(complvl == "District") %>%
   visualize_map_bycomplvl() +
   guides(fill = guide_legend(title = "District", nrow = 4, byrow = TRUE))
@@ -183,8 +183,8 @@ viz_map_bycomplvl_grid <-
 
 teproj::export_ext_png(
   # viz_map_bycomplvl_grid,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
   height = 8,
   width = 10,
@@ -192,7 +192,7 @@ teproj::export_ext_png(
 )
 ```
 
-+ For schools, winning is a "winner-take-all" matter: only the school with the most combined points
++ For schools_uil, winning is a "winner-take-all" matter: only the school with the most combined points
 among its individual competitors advances. On ther other hand, an individual
 may advance even if his school does not win if he places among the top _n_.
 The value of _n_ is dependent on the competition type. [^uil_rules]

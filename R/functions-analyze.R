@@ -13,21 +13,21 @@ validate_nm <-
   }
 
 identify_rgx_from_params <-
-  function(params = NULL, col_rgx = NULL) {
+  function(config = NULL, col_rgx = NULL) {
     nm <- sprintf("rgx_%s_filt", col_rgx)
     # validate_nm(data, nm)
-    ret <- params[[nm]]
+    ret <- config[[nm]]
     ret
   }
-
-# identify_rgx_from_params(params, col_rgx = "name_last")
+# identify_rgx_from_params(config, col_rgx = "name")
+# identify_rgx_from_params(config, col_rgx = "name_last")
 filter_rnk_or_rgx_at <-
   function(data = NULL,
-           params = NULL,
+           config = NULL,
            col_rnk = "rnk",
-           n_rnk = params$n_rnk_html,
+           n_rnk = config$n_rnk_html,
            col_rgx = "name_last",
-           rgx = identify_rgx_from_params(params, col_rgx)) {
+           rgx = identify_rgx_from_params(config, col_rgx)) {
     # validate_nm(data, col_rnk)
     # validate_nm(data, col_rgx)
     data %>%
@@ -41,6 +41,14 @@ create_kable_filt_at <-
       filter_rnk_or_rgx_at(...) %>%
       teproj::create_kable(n_show = Inf, format = format)
 
+  }
+
+
+prettify_nums_for_kable <-
+  function(data = NULL) {
+    data %>%
+      mutate_if(is.numeric, funs(round(., 2))) # %>%
+    # mutate_if(is.numeric, funs(scales::comma))
   }
 
 add_stats_cols_by_at <-

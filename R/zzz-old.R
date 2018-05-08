@@ -53,13 +53,13 @@ filename_import_suffix <- "-cleaned"
 filename_import_ext <- ".csv"
 filepath_import_schools <-
   str_c(dir_import,
-        "schools",
+        "schools_uil",
         filename_import_suffix,
         filename_import_ext)
 
 filepath_import_persons <-
   str_c(dir_import,
-        "persons",
+        "persons_uil",
         filename_import_suffix,
         filename_import_ext)
 
@@ -177,10 +177,10 @@ num_complvls <- length(complvls_valid)
 #' I would like to know how I stacked up histogrically among all students.
 #'
 #' Additionaly, aside from standardized testing, these competitions might be the best way
-#' of identifiing "strong" sutdents and schools. In fact, given the competitive
+#' of identifiing "strong" sutdents and schools_uil. In fact, given the competitive
 #' nature of this domain, one could argue that these competitions provide
-#' better gauges of "elite" sutdents and schools. Thus, analysis of competition
-#' results is useful for revealing highly reputable schools and spotlighting
+#' better gauges of "elite" sutdents and schools_uil. Thus, analysis of competition
+#' results is useful for revealing highly reputable schools_uil and spotlighting
 #' superior students.
 #'
 #' Finally, as if I needed any other excuse to invesitgate this data,
@@ -195,19 +195,19 @@ num_complvls <- length(complvls_valid)
 #'
 #' First, before doing any kind of analysis, one should be aware of some "meta" details.
 #'
-#' The UIL categorizes schools into one of six "conferences". The conference labels
+#' The UIL categorizes schools_uil into one of six "conferences". The conference labels
 #' range from `1A`, `2A`, ..., `6A`, where the increasing leading digit (i.e. `1`, `2`, etc.)
 #' generally corresponds to increasing school size. Schools only compete against
-#' other schools in their conference.
+#' other schools_uil in their conference.
 #'
 #' The UIL defines 3 levels of competition (in order of "difficulty"): `District`, `Region`, and `State`.
 #' Winning a `District` competitions, results in a `Region` competition appearance,
 #' and, subsequently, winning a `Region` competiton results in a `State` competition appearance.
-#' (Keep in mind that schools still only compete against other schools in their same
+#' (Keep in mind that schools_uil still only compete against other schools_uil in their same
 #' conference, even as they advance.)
 #' Note that The UIL identifies 32 total `District`s in Texas, which are aggregated into 4 `region`s.
 #'
-#' For schools, winning is a "winner-take-all" matter: only the school with the most combined points
+#' For schools_uil, winning is a "winner-take-all" matter: only the school with the most combined points
 #' among its individual competitors advances. On ther other hand, an individual
 #' may advance even if his school does not win if he places among the top `n`.
 #' (Note that $n$is dependent on the competition type. See the UIL rules for more details.).
@@ -377,12 +377,12 @@ grid.arrange(viz_cnt_bycomplvl_grid)
 save_viz(viz_cnt_bycomplvl_grid)
 
 #'
-#' It seems fair to say that the distribution of schools among districts/regions/conferences
+#' It seems fair to say that the distribution of schools_uil among districts/regions/conferences
 #' is relatively even. This is to be expected since the UIL (presumably)
-#' tries to divide schools evenly among each grouping (to the extent possible) in
+#' tries to divide schools_uil evenly among each grouping (to the extent possible) in
 #' order to stimulate fair competition.
 #'
-#' ### Which competition types have the most individual competitors and distinct schools?
+#' ### Which competition types have the most individual competitors and distinct schools_uil?
 #'
 #+ results = "hide"
 compute_cnt_bycomp_byx <- function(d) {
@@ -802,7 +802,7 @@ save_viz(viz_comp_stats_byx_grid)
 #' over time is a strong indication that the tests have about the same difficulty every year.
 #' This implies that it would not be unreasonable to compare raw test scores
 #' for a given competition type when comparing individuals
-#' and schools across different years. (Nonetheless, I account for year-t0-year
+#' and schools_uil across different years. (Nonetheless, I account for year-t0-year
 #' variation in my calculations.)
 #'
 #' ### Which competition types have the largest increase in scores with increasing competition level?
@@ -1069,10 +1069,10 @@ comps_stats_byperson_top_byconf %>%
 #'
 #' What stands out here is that there doesn't seem to be as many individual
 #' competitors in `6A`. I would hypothesize that this might because the `6A` conference
-#' has the largest schools, which are more likely to "allocate sparingly" their individual
+#' has the largest schools_uil, which are more likely to "allocate sparingly" their individual
 #' competitors among different competitions. (There is a limit on the number of entrants
-#' per school in a given competition. Smaller schools are much less likely to ever
-#' have enough people to reach the per-school limit, so individuals at these schools
+#' per school in a given competition. Smaller schools_uil are much less likely to ever
+#' have enough people to reach the per-school limit, so individuals at these schools_uil
 #' are welcom to compete in as many competitions as they would like.)
 #'
 #' ### Which individuals were most "dominant"?
@@ -1094,7 +1094,7 @@ comps_stats_byperson_top_byconf %>%
 #' in them. This is not how I quantify "domination".
 #'
 #' I use `prank_sum` (or some slight modification of it) as the primary choice for ranking individuals and
-#' schools in other parts of my analysis. (Raw `score` is also used, although
+#' schools_uil in other parts of my analysis. (Raw `score` is also used, although
 #' it is "naive".)
 #'
 #'
@@ -1391,7 +1391,7 @@ comp_rank_byschool_byyear_clemens %>% select(-school)
 #' my school has _never_ made an appearnce in a `State` competitions!
 #'
 #'
-#' ### Which schools have been the most "dominant"?
+#' ### Which schools_uil have been the most "dominant"?
 #'
 #+ results = "hide"
 comp_rank_byschool <-
@@ -1422,7 +1422,7 @@ comp_rank_byschool_clemens <-
 comp_rank_byschool %>% slice(1:10)
 
 #'
-#' I didn't expect to see my school among the most "dominant" schools. Nevertheless,
+#' I didn't expect to see my school among the most "dominant" schools_uil. Nevertheless,
 #' my school is ranked at `r comp_rank_byschool_clemens$rank`, which is respectable.
 #'
 #'

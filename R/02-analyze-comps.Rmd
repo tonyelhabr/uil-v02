@@ -12,16 +12,16 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
   # echo = TRUE,
   echo = FALSE,
-  # cache = TRUE,
+  cache = TRUE,
   # include = FALSE,
   # results = "markdown",
   # results = "hide",
   fig.align = "center",
   # fig.show = "asis",
-  fig.width = 10,
-  fig.height = 10,
-  # out.width = 6,
-  # out.height = 6,
+  fig.width = 7,
+  fig.height = 7,
+  # out.width = 7,
+  # out.height = 7,
   warning = FALSE,
   message = FALSE
 )
@@ -29,23 +29,25 @@ knitr::opts_chunk$set(
 ```
 
 ```{r load, include = FALSE}
-source(file.path("R", "00-config.R"))
-# load(params$path_analysis_image)
+source(file.path("R", "config.R"))
+# load(config$path_functions_image)
 
-schools <-
-  params$path_schools_clean %>%
+schools_uil <-
+  config$path_schools_uil %>%
   teproj::import_path_cleanly()
 
-persons <-
-  params$path_persons_clean %>%
+persons_uil <-
+  config$path_persons_uil %>%
   teproj::import_path_cleanly()
 
 ```
 
 ## Competition Participation
 
-Some of the first questions that might come to mind are those regarding participation
-in each level of competition (i.e. District, Region, and State) and conference classification.
+Some of the first questions that might come to mind are those regarding the 
+number of schools
+in each level of competition (i.e. District, Region, and State) and each 
+conference classification level (1A, 2A, ... 6A).
 
 ```{r summarise_n_by_funcs, include = FALSE}
 summarise_n_bygrps <-
@@ -114,7 +116,7 @@ summarise_n_bycompcomplvlconf <-
         cols_grp2 = c("complvl", "comp", "conf")
       ) %>%
       group_by(complvl, comp) %>%
-      tetidy::rank_arrange_at() %>%
+      tetidy::rank_arrange_at("n") %>%
       ungroup() %>%
       arrange(comp, complvl, rnk)
   }
@@ -124,11 +126,11 @@ summarise_n_bycompcomplvlconf <-
 ```{r summ_n_bycomplvl, include = FALSE}
 summ_n_bycomplvl <-
   bind_rows(
-    schools %>%
+    schools_uil %>%
       summarise_n_bycomplvl("District"),
-    schools %>%
+    schools_uil %>%
       summarise_n_bycomplvl("Region"),
-    schools %>%
+    schools_uil %>%
       mutate(complvl = "Conference") %>%
       select(-complvl_num) %>%
       rename(complvl_num = conf) %>%
@@ -136,16 +138,16 @@ summ_n_bycomplvl <-
   )
 ```
 
-```{r viz_n_bycomplvl, include = FALSE, fig.show = "asis"}
+```{r viz_n_bycomplvl, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
 viz_n_bycomplvl <-
   summ_n_bycomplvl %>%
   ggplot(aes(x = complvl_num, y = n)) +
-  geom_point(aes(size = desc(rnk)), color = "black") +
+  geom_point() +
   geom_hline(
     data = summ_n_bycomplvl %>%
       group_by(complvl) %>%
-      summarise(n_filtan = mean(n)),
-    aes(yintercept = n_filtan),
+      summarise(n_mean = mean(n)),
+    aes(yintercept = n_mean),
     color = "black",
     linetype = "dashed",
     size = 1
@@ -157,12 +159,14 @@ viz_n_bycomplvl <-
     caption =
       str_wrap(
         paste0(
-          "Note that these groupings are not subsets of the same \"parent\" group.",
-          "(Rather, they are different groupings of all schools.",
+          "Dashed line: average for each grouping. ",
+          "Note that these groupings are not subsets of the same \"parent\" group. ",
+          "(Rather, they are different groupings of all schools .",
           "District and Region are references to competition levels,",
-          " while conference is a classification based on school size.)"
+          " while conference is a classification based on school size.) ",
+          "State is not shown because there is no \"subgroup\" of it."
         ),
-        125
+        100
       )
   ) +
   teplot::labs_xy_null() +
@@ -171,11 +175,11 @@ viz_n_bycomplvl <-
 viz_n_bycomplvl
 teproj::export_ext_png(
   viz_n_bycomplvl,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
-  height = 6,
-  width = 8
+  height = 7,
+  width = 7
 )
 ```
 
@@ -185,25 +189,25 @@ tries to divide schools evenly among each grouping (to the extent possible) in
 order to stimulate fair competition.
 
 [^state_grouping]:
-The State competition level is not shown because it there is no "sub-groupings" of State
+The State competition level is not shown because it there is no "sub-grouping" of State
 (like there is 1, 2, 3, ... for each of the groupings shown).
 
 [^competition_groupings]:
 As a technical note, Districts, Regions, and Conferences are not really all of the same "type"
 of data. Nevertheless, these different "groupings" each stratify the sample population in some manner.
 
-Going along with curiosity about participation at each competition level and conference
-is the question of the number of distinct individual competitors and schools for each
+With some context regarding the number of schools in each competition level and in conference,
+let's now consider the number of distinct individual competitors and schools for each
 competition type (i.e. Calculator, Computer Science, etc.)
 
 
 ```{r summ_n_bycomp, include = FALSE}
 summ_n_bycomp <-
   bind_rows(
-    schools %>%
+    schools_uil %>%
       summarise_n_bycomp() %>%
       mutate(entity = "Schools"),
-    persons %>%
+    persons_uil %>%
       summarise_n_bycomp() %>%
       mutate(entity = "Competitors")
   )
@@ -242,12 +246,12 @@ visualize_n_bycomp_common_at <-
 ```{r comp_icons, include = FALSE, eval = FALSE}
 # comp_icons <-
 #   tibble::tibble(
-#     comp = params$comps_info$comp_name,
+#     comp = config$comps_info$comp_name,
 #     icon = c("calculator", "laptop", "stats-bars", "wand", "flask")
 #   )
 ```
 
-```{r viz_n_bycomp, include = FALSE, fig.show = "asis"}
+```{r viz_n_bycomp, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
 viz_n_bycomp <-
   summ_n_bycomp %>%
   visualize_n_bycomp_common_at(col_grp = "entity") +
@@ -261,26 +265,25 @@ viz_n_bycomp
 
 teproj::export_ext_png(
   viz_n_bycomp,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
-  height = 8,
-  width = 8
+  height = 7,
+  width = 7
 )
 ```
 
 Science stands out when evaluating participation by competition type alone.
 
-But what about when considering 
-competition level (i.e. District, Region, and State) as well?
+But what about when considering competition level as well?
 
 ```{r summ_n_bycompcomplvl, include = FALSE}
 summ_n_bycompcomplvl <-
   bind_rows(
-    schools %>%
+    schools_uil %>%
       summarise_n_bycompcomplvl() %>%
       mutate(entity = "Schools"),
-    persons %>%
+    persons_uil %>%
       summarise_n_bycompcomplvl() %>%
       mutate(entity = "Competitors")
   ) %>%
@@ -288,7 +291,7 @@ summ_n_bycompcomplvl <-
 ```
 
 
-```{r viz_n_bycompcomplvl}
+```{r viz_n_bycompcomplvl, echo = FALSE, include = TRUE, fig.show = "asis"}
 viz_n_bycompcomplvl <-
   summ_n_bycompcomplvl %>%
   visualize_n_bycomp_common_at(col_grp = "complvl_entity") +
@@ -302,11 +305,11 @@ viz_n_bycompcomplvl
 
 teproj::export_ext_png(
   viz_n_bycompcomplvl,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
-  height = 8,
-  width = 8
+  height = 7,
+  width = 7
 )
 ```
 
@@ -317,10 +320,10 @@ Now, what about when also considering conferences?
 ```{r summ_n_bycompcomplvlconf, include = FALSE}
 summ_n_bycompcomplvlconf <-
   bind_rows(
-    schools %>%
+    schools_uil %>%
       summarise_n_bycompcomplvlconf() %>%
       mutate(entity = "Schools"),
-    persons %>%
+    persons_uil %>%
       summarise_n_bycompcomplvlconf() %>%
       mutate(entity = "Competitors")
   ) %>%
@@ -328,7 +331,7 @@ summ_n_bycompcomplvlconf <-
 summ_n_bycompcomplvlconf
 ```
 
-```{r viz_n_bycompcomplvlconf, include = FALSE, fig.show = "asis"}
+```{r viz_n_bycompcomplvlconf, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
 viz_n_bycompcomplvlconf <-
   summ_n_bycompcomplvlconf %>%
   filter(entity == "Competitors") %>%
@@ -345,31 +348,42 @@ viz_n_bycompcomplvlconf
 
 teproj::export_ext_png(
   viz_n_bycompcomplvlconf,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
-  height = 8,
-  width = 8
+  height = 7,
+  width = 7
 )
 ```
 
-Once again, all hail Science! Science appears to be the answer to the numerous
+Once again, Science seems to be the most popular.
+So, in all, science appears to be the answer to the numerous
 variations of the "Which competition type/level has the most ...?" question.
 
 ### Competition Scores
 
-That's enough about the volume of individuals and schools in each competition.
-What about their scores?
+With an understanding of the participation in the UIL competitions,
+let's now consider the scores. What does the distribution of scores
+for each competition type look like?
 
 ```{r persons_stats_bycomp, include = FALSE}
+summarise_stats_score_by_at <-
+  function(data = NULL,
+           col = "score",
+           cols_grp = NULL) {
+    tetidy::summarise_stats_by_at(data = data,
+                                  col = col,
+                                  cols_grp = cols_grp)
+  }
+
 persons_stats_bycomp <-
-  persons %>%
+  persons_uil %>%
   summarise_stats_score_by_at(cols_grp = "comp")
 persons_stats_bycomp
 ```
 
-```{r viz_persons_stats_bycomp, include = FALSE, fig.show = "asis"}
-n_comps <- length(params$comps)
+```{r viz_persons_stats_bycomp, echo = FALSE, include = TRUE, fig.show = "asis", fig.width = 7, fig.height = 10}
+n_comps <- length(config$comps_info_list)
 q05_min <- min(persons_stats_bycomp$q05)
 q95_max <- max(persons_stats_bycomp$q95)
 
@@ -379,7 +393,7 @@ lab_caption_stats_bycomp <-
   "Dashed line: mean. Solid lines: z-score = -1 and 1."
 
 viz_persons_stats_bycomp <-
-  persons %>%
+  persons_uil %>%
   inner_join(persons_stats_bycomp, by = "comp") %>%
   ggplot(aes(x = score)) +
   geom_histogram(aes(fill = comp), bins = 30) +
@@ -391,8 +405,8 @@ viz_persons_stats_bycomp <-
     linetype = "solid",
     size = 1
   ) +
-  geom_vline(aes(xintercept = z_n1), color = "black", linetype = "dashed", size = 1) +
-  geom_vline(aes(xintercept = z_p1), color = "black", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = zn1), color = "black", linetype = "dashed", size = 1) +
+  geom_vline(aes(xintercept = zp1), color = "black", linetype = "dashed", size = 1) +
   guides(fill = FALSE) +
   scale_x_continuous(limits = c(q05_min, q95_max)) +
   # scale_y_continuous(breaks = scales::pretty_breaks(), labels = scales::comma) +
@@ -414,11 +428,11 @@ viz_persons_stats_bycomp
 
 teproj::export_ext_png(
   viz_persons_stats_bycomp,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
   height = 10,
-  width = 8
+  width = 7
 )
 ```
 
@@ -437,39 +451,29 @@ see a right- or left-skewed distribution if the test is not robust.)
 To try to understand the score distributions better, let's break them
 down by year, competition level, and conference.
 
-```{r persons_stats_bycomp, include = FALSE}
-summarise_stats_score_by_at <-
-  function(data = NULL,
-           col = "score",
-           cols_grp = NULL) {
-    tetidy::summarise_stats_by_at(data = data,
-                                  col = col,
-                                  cols_grp = cols_grp)
-  }
-
+```{r persons_stats_bycompx, include = FALSE}
 persons_stats_bycompyear <-
-  persons %>%
+  persons_uil %>%
   summarise_stats_score_by_at(cols_grp = c("comp", "year"))
 
 persons_stats_bycompcomplvl <-
-  persons %>%
+  persons_uil %>%
   summarise_stats_score_by_at(cols_grp = c("comp", "complvl"))
 
 persons_stats_bycompconf <-
-  persons %>%
+  persons_uil %>%
   summarise_stats_score_by_at(cols_grp = c("comp", "conf"))
 ```
 
-```{r viz_persons_stats_bycomp, include = FALSE, fig.show = "hide"}
-
+```{r viz_persons_stats_bycompx, include = FALSE, fig.show = "hide"}
 visualize_persons_stats_bycompx_at <-
   function(data = NULL, x = NULL) {
     # Using facet_wrap() so strip.position can be specified.
     data %>%
       ggplot(aes_string(x = x, y = "mean")) +
       geom_pointrange(aes(
-        ymin = z_n1,
-        ymax = z_p1,
+        ymin = zn1,
+        ymax = zp1,
         color = comp
       )) +
       scale_color_set1() +
@@ -487,8 +491,8 @@ visualize_persons_stats_bycompx_at <-
       theme(legend.position = "none")
   }
 
-year_min <- min(persons$year)
-year_max <- max(persons$year)
+year_min <- min(persons_uil$year)
+year_max <- max(persons_uil$year)
 year_labs <- seq.int(year_min, year_max, by = 4L)
 
 lab_caption_stats_bycompx <-
@@ -520,15 +524,15 @@ viz_persons_stats_bycompconf <-
        caption = lab_caption_stats_bycompx)
 teproj::export_ext_png(
   viz_persons_stats_bycompconf,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
-  height = 6,
-  width = 8
+  height = 7,
+  width = 7
 )
 ```
 
-```{r viz_persons_stats_bycomp_grid, include = FALSE, fig.show = "asis"}
+```{r viz_persons_stats_bycomp_grid, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 10, fig.width = 7}
 viz_persons_stats_bycomp_grid <-
   gridExtra::arrangeGrob(
     viz_persons_stats_bycompyear + theme(strip.text = element_blank()),
@@ -540,11 +544,11 @@ gridExtra::grid.arrange(viz_persons_stats_bycomp_grid)
 
 teproj::export_ext_png(
   # viz_persons_stats_bycomp_grid,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
   height = 10,
-  width = 8,
+  width = 7,
   viz_persons_stats_bycomp_grid
 )
 ```
@@ -566,19 +570,25 @@ This could be indicative of a number of factors:
 
     + Larger schools have more "superior" individual competitors, perhaps due
     to having a larger "talent pool" of students.
-    + Smaller schools, in an effort to compete in as many different competition types as
+    
+    + In an effort to compete in as many different competition types as
     possible and/or reach the minimum number of individual competitors needed to qualify
     the school as a team (e.g. at least 3 individuals), 
-    push individuals to participate in competitions types that they would 
-    not normally participate even if they are not really prepared to do so.
+    scmaller schools push individuals to participate in competitions
+    even if they are not really prepared to do so.
     (This might be considered a form of [selection bias](https://en.wikipedia.org/wiki/Selection_bias).)
-    + There may not be as many schools, and, consequently, as many students, in larger conferences,
+    
+    + There may not be as as many unique students competing in larger conferences,
     leading to the possibility that the scores in the larger conference are more
-    likely to be subject to high variance.
+    likely to be subject to high variance. ^[larger]
     
     While I somewhat doubt the last of these possibilities (because high variance
     would equally likely manifest in lower scores in larger conferences), the other
-    two are intuitive.
+    two seem valid.
+
+[^larger]:
+It was shown before that the number of schools across conferences is 
+relatively even, so one would need to stratify the population by individuals rather than schools.
 
 So maybe there isn't a some broad, temporal trend to the scores.
 But is there a trend in scores among the competition levels (for a given competition type)?
@@ -619,7 +629,7 @@ persons_stats_bycompcomplvl_diffs_tidy <-
   arrange(comp)
 ```
 
-```{r viz_persons_stats_bycompcomplvl_diffs, include = FALSE, fig.show = "asis"}
+```{r viz_persons_stats_bycompcomplvl_diffs, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
 viz_persons_stats_bycompcomplvl_diffs <-
   persons_stats_bycompcomplvl_diffs_tidy  %>%
   mutate_at(
@@ -643,30 +653,32 @@ viz_persons_stats_bycompcomplvl_diffs
 
 teproj::export_ext_png(
   viz_persons_stats_bycompcomplvl_diffs,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
-  height = 6,
-  width = 10
+  height = 7,
+  width = 7
 )
 ```
 
-
-In fact, it does appear that score distributions skew higher with higher levels
+In fact, it does appear that score distributions skew higher with increasing levels
 of competition. If this were not true, then I would suspect that test are made to be
-more difficult at each competition stage. (Actually, it might be true that there _is_ some increase
+more difficult at each competition stage. ^[increase]
+
+[^increase]:
+Actually, it might be true that there _is_ some increase
 in test difficulty with advancing competitions, but such an adjustment, if it is truly made,
-does not quite offset the skill level of the advancing competitors.)
+does not quite offset the skill level of the advancing competitors.
 
 Notably, it appears that Number Sense demonstrates the largest
 "jumps" in aggregate scores with increasing competition levels. Having competed
 in this competition before, I do not find this all too surprising.
 More than any other competition type, those who succeed Number Sense seem to
 rely on natural abilities (as opposed to training) to beat out the competition.
-I would go so far as to say that for some individuals, this "natural ability" may be "savant-like".
+(I would go so far as to say that for some individuals, this natural ability is "savant-like".)
 Consequently, with increasing competition level, it is more likely that these
-"superior" competitors stand out, and, as observed here, skew
-the scoring distributions higher, with "inferior" competitors weighing down the averages.
+"superior" competitors stand out, and, as observed here, cause the
+the scoring distributions to skew higher.
 
 So there _does_ seem to be a trend of higher scores with higher competition level,
 but has _that_ trend changed over time? [^trend]
@@ -691,17 +703,9 @@ persons_stats_bycompyear_terms <-
   unnest(terms, .drop = TRUE) %>%
   arrange(comp, p.value)
 persons_stats_bycompyear_terms
-
-html_persons_stats_bycompyear_terms <-
-  persons_stats_bycompyear_terms %>%
-  # filter(term == "year") %>%
-  select(comp, term, p.value) %>%
-  mutate_if(is.numeric, funs(round(., 4))) %>%
-  spread(term, p.value) %>%
-  teproj::create_kable(n_show = Inf)
 ```
 
-```{r viz_persons_stats_bycompyear_diffs, include = FALSE, fig.show = "asis"}
+```{r viz_persons_stats_bycompyear_diffs, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
 viz_persons_stats_bycompyear_diffs <-
   persons_stats_bycompyear_diffs %>%
   ggplot(aes(x = year, y = mean_diff_pct)) +
@@ -727,44 +731,52 @@ viz_persons_stats_bycompyear_diffs
 
 teproj::export_ext_png(
   viz_persons_stats_bycompyear_diffs,
-  export = params$export_viz,
-  dir = params$dir_viz,
+  export = config$export_viz,
+  dir = config$dir_viz,
   units = "in",
-  height = 8,
-  width = 8
+  height = 7,
+  width = 7
 )
 ```
 
 As with the raw scores, there does not appear to be any noticeable
-trend in the change in level of difficulty of test between each competition level
-over time. (Aside from a steep drop-off in the Science scores in 2014, there's
+trend in the change in level of difficulty of tests between each competition level
+over time. (Aside from a steep drop-off in the Science scores in 2014, there's really
 nothing too interesting about this plot.)
-Along with the previous temporal visual where competition level is not distinguished,
+Along with the previous temporal visual where a trend with competition level is not distinguished,
 this plot is a strong indication that the tests (and, most likely,
 the skills of the competitors) have not changed over time.
 
 Such visual inferences are supported quantitatively.
-Observe the p.values of the variables for linear regression models fit for each competition type,
+Observe the 
+[p-values](https://en.wikipedia.org/wiki/P-value) of the variables 
+for [linear regression](https://en.wikipedia.org/wiki/Linear_regression)
+models fit for each competition type,
 where the average year-to-year score difference (as a percentage) is estimated given
-average competition-specific score and year. Taking the customary p.value threshhold of 0.05
-as the level of significance (where the p.value must be less than the thresshold
-in order to infer that the null hypothesis that the model is not predictive), the year term
+average competition-specific score and year. Taking the customary p-value threshhold of 0.05
+as the level of significance (where one may deduce that the
+model is not predictive if the the p.value is greater than the thresshold value), the year term
 is shown to be insignificant.
 
 $$
 mean \space year \space diff \space pct = intercept + mean * \beta_{1} + year * \beta_{2}
 $$
 
-```{r html_persons_stats_bycompyear_terms}
-html_persons_stats_bycompyear_terms
+```{r html_persons_stats_bycompyear_terms, include = FALSE}
+persons_stats_bycompyear_terms %>%
+  # filter(term == "year") %>%
+  select(comp, term, p.value) %>%
+  mutate_if(is.numeric, funs(round(., 4))) %>%
+  spread(term, p.value) %>%
+  teproj::create_kable(n_show = Inf)
 ```
 
-There could be a number of confounding factors that explain the relatively even
-competition level of time.
+There could be a number of confounding factors that explain the relatively even level of
+competition over time, including the following.
 
 + It could be that test makers have purposely adjusted the difficulty of tests
 to result in scores that are similar to historical scores for a given competition
-and/or competition level. (This may be a way to 
+and/or competition level.
 
 + Or, perhaps more likely, test makers and competition skill level
 have stayed relatively the same over time.
@@ -772,14 +784,14 @@ have stayed relatively the same over time.
 If the latter is true, at the very least
 we can say that, despite how the media or popular culture may portray younger
 generations, the prowess of the academic "elite" of the current generation of high school
-students in Texas has not dropped off
+students in Texas has not dropped off.
 (Nonetheless, nothing definitive should be deduced about those 
 who do not compete in UIL academic competitions and are anywhere outside of Texas.)
 
-## Conclusion
+## Wrap-up
 
-In this write-up, we visualized the participation and scores of 
-academic UIL competitions in a number of different
+In this write-up, the participation and scores of Texas high school 
+academic UIL competitions are illustrated in a number of different
 ways--by competition type, by competition level, by year, and by variations of these.
 Next, we'll take a closer look at some more specific questions, focusing on individual competitors.
 
