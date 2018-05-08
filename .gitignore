@@ -4,4 +4,4 @@
 .Ruserdata
 **Thumbs.db
 data-raw/
-*.cache/
+**.cache/
