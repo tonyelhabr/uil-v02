@@ -33,7 +33,9 @@ source(file.path("R", "config.R"))
 persons_uil <-
   config$path_persons_uil %>%
   teproj::import_path_cleanly()
-
+schools_uil <-
+  config$path_schools_uil %>%
+  teproj::import_path_cleanly()
 ```
 
 Let's take a look at individual competitors in the academic UIL competitions.
@@ -173,22 +175,16 @@ the number of scores less that that of a given individual for a unique competiti
 and a unique competition is defined as a unique combination of 
 year, competition level, and competition type.
 
-```{r persons_stats, include = FALSE}
-add_persons_stats_cols_by_at <-
-  function(data = NULL,
-           cols_grp = c("name", "school", "city"),
-           col_rnk = "prnk_sum",
-           ...) {
-    add_stats_cols_by_at(data = data,
-                         cols_grp = cols_grp,
-                         col_rnk = col_rnk,
-                         ...)
-  }
-
+```{r stats, include = FALSE}
 persons_stats <-
   persons_uil %>%
-  add_persons_stats_cols_by_at()
+  add_stats_cols_by_at(cols_grp = c("name", "school", "city"))
+
+schools_stats <-
+  schools_uil %>%
+  add_stats_cols_by_at(cols_grp = c("school", "city"))
 ```
+
 
 ```{r html_persons_stats, echo = FALSE, include = TRUE}
 html_persons_stats <-
@@ -203,19 +199,8 @@ html_persons_stats
 ```
 
 Also, I think it's interesting to look at the distribution of counts for
-advancement and state competition appearances. The heavily right skewed
+competitors defeated, advancement, and state competition appearances. The heavily right skewed
 distribution of values gives an indication of the difficulty of succeeding consistently.
-
-```{r persons_stats_n_x, echo = FALSE, include = TRUE, eval = FALSE}
-persons_stats %>%
-  count(n_advanced_sum) %>% 
-  arrange(desc(n_advanced_sum)) %>% 
-  create_kable()
-persons_stats %>%
-  count(n_state_sum) %>% 
-  arrange(desc(n_state_sum)) %>% 
-  create_kable()
-```
 
 ```{r viz_persons_stats_n_x, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
 count_rename_at <-
@@ -226,32 +211,53 @@ count_rename_at <-
       count(!!col) %>% 
       rename(!!col_out := !!col)
   }
+do_count_rename_at <-
+  function(data = NULL) {
+    bind_rows(
+      data %>%
+        count_rename_at("n_defeat_sum") %>% 
+        mutate(lab_stat = "Competitors Defeated"),
+      data %>%
+        count_rename_at("n_advanced_sum") %>% 
+        mutate(lab_stat = "Competition Advancements"),
+      data %>%
+        count_rename_at("n_state_sum") %>% 
+        mutate(lab_stat = "State Competitions")
+    )
+  }
+visualize_stats_n_x <-
+  function(data = NULL) {
+    data %>% 
+      ggplot(aes(x = value, y = nn)) +
+      geom_col() +
+      facet_wrap(~lab_stat, scales = "free") +
+      scale_y_log10(labels = scales::comma) +
+      # teplot::scale_xy_pretty_comma() +
+      teplot::theme_te_facet_dx() +
+      theme(legend.position = "none") +
+      labs(
+        x = "Count of Occurrences",
+        y = "Log 10 of Count"
+      )
+  }
 
-persons_stats_n_x <-
+stats_n_x <-
   bind_rows(
     persons_stats %>%
-    count_rename_at("n_advanced_sum") %>% 
-    mutate(lab_stat = "Compeition Advancements"),
-  persons_stats %>%
-    count_rename_at("n_state_sum") %>% 
-    mutate(lab_stat = "State Competition Appearances")
+      do_count_rename_at() %>% 
+      mutate(entity = "persons"),
+    schools_stats %>%
+      do_count_rename_at() %>% 
+      mutate(entity = "schools")
   )
 
+lab_title_persons_stats_n_x <-
+  "Distribution of Counts of Individual Performance Metrics"
 viz_persons_stats_n_x <-
-  persons_stats_n_x %>% 
-  ggplot(aes(x = value, y = nn)) +
-  geom_col() +
-  facet_wrap(~lab_stat, scales = "free_y") +
-  scale_y_log10(labels = scales::comma) +
-  # teplot::scale_xy_pretty_comma() +
-  teplot::theme_te_facet_dx() +
-  theme(legend.position = "none") +
-  teplot::labs_xy_null() +
-  labs(
-    title = "Distribution of Individual Advancements and State Appearances",
-    y = "Log 10 of Count of Occurrence",
-    x = "Number of Occurrences"
-  )
+  stats_n_x %>% 
+  filter(entity == "persons") %>% 
+  visualize_stats_n_x() +
+  labs(title = lab_title_persons_stats_n_x)
 viz_persons_stats_n_x
 teproj::export_ext_png(
   viz_persons_stats_n_x,
@@ -262,6 +268,35 @@ teproj::export_ext_png(
   width = 7
 )
 ```
+
+For comparison's sake, let's can visualize the same metrics aggregated at the school level.
+
+```{r viz_schools_stats_n_x, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+viz_schools_stats_n_x <-
+  stats_n_x %>% 
+  filter(entity == "schools") %>% 
+  visualize_stats_n_x() +
+  labs(title = str_replace(lab_title_persons_stats_n_x, "Individual", "School"))
+viz_schools_stats_n_x
+teproj::export_ext_png(
+  viz_schools_stats_n_x,
+  export = config$export_viz,
+  dir = config$dir_viz,
+  units = "in",
+  height = 7,
+  width = 7
+)
+```
+
+We see that the distributions are skewed towards the right here as well, although
+not quite as "evenly". This indicates that some schools tend to perform well
+at a more consistent rate than individuals themselves. Intuitively, this makes sense.
+It can be very difficult for individuals alone to beat out the competition, especially
+if they have an "off" day.
+On the other hand, schools, relying on teams of individuals, are placed according to the sum
+of the top handful (usually the top three) of individual competitor scores.
+Thus, school placings are more likely to be similar across years, meaning that schools
+that are observed to do well in any given year are likely to do well in other years as well.
 
 So it should be obvious that it is difficult to make it the highest level of competition--State.
 But exactly how difficult is it? Let's identify those people (and their scores)

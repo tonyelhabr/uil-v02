@@ -30,8 +30,6 @@ knitr::opts_chunk$set(
 
 ```{r load, include = FALSE}
 source(file.path("R", "config.R"))
-# load(config$path_functions_image)
-
 schools_uil <-
   config$path_schools_uil %>%
   teproj::import_path_cleanly()
@@ -41,6 +39,9 @@ persons_uil <-
   teproj::import_path_cleanly()
 
 ```
+
+
+
 
 ## Competition Participation
 
@@ -211,6 +212,17 @@ summ_n_bycomp <-
       summarise_n_bycomp() %>%
       mutate(entity = "Competitors")
   )
+
+```
+
+```{r scale_x_set1_funcs, include = FALSE}
+scale_color_set1 <- function() {
+  scale_color_brewer(palette = "Set1")
+}
+
+scale_fill_set1 <- function() {
+  scale_fill_brewer(palette = "Set1")
+}
 
 ```
 
@@ -726,7 +738,7 @@ viz_persons_stats_bycompyear_diffs <-
   teplot::labs_xy_null() +
   labs(title = lab_title_stats_bycomp_prefix,
        subtitle = "By Year",
-       caption = "Dashed line: Comptition-specific average year-to-year difference percentage.")
+       caption = "Dashed line: Competition-specific average year-to-year difference percentage.")
 viz_persons_stats_bycompyear_diffs
 
 teproj::export_ext_png(

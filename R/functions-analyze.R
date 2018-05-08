@@ -1,16 +1,8 @@
 
-scale_color_set1 <- function() {
-  scale_color_brewer(palette = "Set1")
-}
-
-scale_fill_set1 <- function() {
-  scale_fill_brewer(palette = "Set1")
-}
-
-validate_nm <-
-  function(data = NULL, nm = NULL) {
-    stopifnot(length(intersect(names(data), nm)) == 1)
-  }
+# validate_nm <-
+#   function(data = NULL, nm = NULL) {
+#     stopifnot(length(intersect(names(data), nm)) == 1)
+#   }
 
 identify_rgx_from_params <-
   function(config = NULL, col_rgx = NULL) {
@@ -55,6 +47,7 @@ add_stats_cols_by_at <-
   function(data = NULL,
            cols_grp = NULL,
            col_rnk = "prnk_sum",
+           na.rm = TRUE,
            rank_all = FALSE,
            ...) {
     ret <-
@@ -62,12 +55,12 @@ add_stats_cols_by_at <-
       group_by(!!!syms(cols_grp)) %>%
       summarise(
         n = n(),
-        prnk_sum = sum(prnk),
-        prnk_mean = mean(prnk),
-        n_defeat_sum = sum(n_defeat),
-        n_defeat_mean = mean(n_defeat),
-        n_advanced_sum = sum(advanced),
-        n_state_sum = sum(n_state)
+        prnk_sum = sum(prnk, na.rm = na.rm),
+        prnk_mean = mean(prnk, na.rm = na.rm),
+        n_defeat_sum = sum(n_defeat, na.rm = na.rm),
+        n_defeat_mean = mean(n_defeat, na.rm = na.rm),
+        n_advanced_sum = sum(advanced, na.rm = na.rm),
+        n_state_sum = sum(n_state, na.rm = na.rm)
       ) %>%
       ungroup()
     if(!rank_all) {
@@ -84,25 +77,4 @@ add_stats_cols_by_at <-
     ret
   }
 
-add_persons_stats_cols_by_at <-
-  function(data = NULL,
-           cols_grp = c("name", "school", "city"),
-           col_rnk = "prnk_sum",
-           ...) {
-    add_stats_cols_by_at(data = data,
-                         cols_grp = cols_grp,
-                         col_rnk = col_rnk,
-                         ...)
-  }
-
-add_schools_stats_cols_by_at <-
-  function(data = NULL,
-           cols_grp = c("school", "city"),
-           col_rnk = "prnk_sum",
-           ...) {
-    add_stats_cols_by_at(data = data,
-                         cols_grp = cols_grp,
-                         col_rnk = col_rnk,
-                         ...)
-  }
 

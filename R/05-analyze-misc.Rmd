@@ -28,7 +28,7 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r load, include = FALSE}
+```{r load, include = FALSE, cache=FALSE}
 source(file.path("R", "config.R"))
 schools_uil <-
   config$path_schools_uil %>%
@@ -39,71 +39,12 @@ persons_uil <-
   teproj::import_path_cleanly()
 ```
 
-```{r test}
-persons_n4 <-
-  persons_uil %>% 
-  count(name, school, city, conf, comp, complvl, complvl_num) %>% 
-  # filter(complvl == "State") %>% 
-  filter(n == 4)
-
-persons_n4_viz <-
-  persons_uil %>% 
-  semi_join(persons_n4) %>% 
-  # filter(complvl == "State") %>% 
-  unite(id, name, school, city, conf, comp, complvl, complvl_num, sep = "-", remove = FALSE) %>% 
-  group_by(id, complvl) %>% 
-  mutate(year_order = row_number(year)) %>% 
-  ungroup()
-
-viz_persons_n4 <-
-  persons_n4_viz %>% 
-  ggplot(aes(x = year_order, y = prnk)) +
-  geom_line(aes(group = id), alpha = 0.1) +
-  geom_smooth(method = "lm", color = "blue") +
-  # geom_smooth(method = "loess", color = "red") +
-  geom_point(
-    data = 
-      persons_n4_viz %>%
-      group_by(complvl, year_order) %>%
-      summarise(prnk_mean = mean(prnk)) %>% 
-      ungroup(),
-    aes(y = prnk_mean), size = 3, color = "blue") +
-  facet_wrap(~complvl, scales = "free") +
-  teplot::theme_te_facet()
-viz_persons_n4
-persons_multi <-
-  persons_uil %>% 
-  # filter(complvl == "District") %>% 
-  count(name, school, city, conf, comp, complvl, complvl_num) %>% 
-  filter(n >= 2)
-
-persons_improve <-
-  persons_uil %>% 
-  semi_join(persons_multi) %>% 
-  group_by(name, school, city, conf, comp, complvl, complvl_num) %>% 
-  arrange(year, .by_group = TRUE) %>% 
-  # mutate(order_byperson = row_number(desc(year))) %>% 
-  # mutate(prnk_lag = lag(prnk)) %>% 
-  mutate(improve = ifelse(prnk > lag(prnk), TRUE, FALSE)) %>% 
-  ungroup() %>% 
-  filter(!is.na(improve))
-persons_improve_n <-
-  persons_improve %>% 
-  count(improve)
-persons_improve_n_c <- tibble::deframe(persons_improve_n)
-btest <-
-  binom.test(persons_improve_n_c["TRUE"], sum(persons_improve_n_c)) %>% 
-  broom::tidy()
-btest
-```
-
-
 There's a lot to analyze with the Texas high school academic UIL data set.
-Maybe I find it more interesting than otherse due to my personal experiences with
+Maybe I find it more interesting than others due to my personal experiences with
 these competitions.
 
 Now, after examining some of the biggest topics associated
-with this data--including competitions, invidividuals, and schools--in a broad manner,
+with this data--including competitions, individuals, and schools--in a broad manner,
 there are
 some other things that don't necessarily fall into these categories that 
 I think are worth investigating.
@@ -127,7 +68,7 @@ As in the analysis of individuals and schools, I'll include myself and my school
 where applicable.
 </i>
 
-```{r siblings_funcs, include = FALSE}
+```{r siblings_funcs, include = FALSE, cache=FALSE}
 add_name_first_pair_col <-
   function(data = NULL) {
     data %>% 
@@ -188,7 +129,7 @@ get_siblings_by_at <-
 ```
 
 
-```{r siblings, include = FALSE}
+```{r siblings, include = FALSE, dependson=load}
 siblings <-
   persons_uil %>%
   get_siblings_by_at(
@@ -201,7 +142,9 @@ siblings <-
                  "comp",
                  "complvl_num")
   )
-# NOTE: Need to fix double counting here.
+```
+
+```{r siblings_n, include = FALSE, dependson=siblings}
 siblings_n <-
   siblings %>% 
   group_by(name_last, name_first_pair) %>%
@@ -213,7 +156,7 @@ siblings_n <-
 
 ```
 
-```{r html_siblings_n, echo = FALSE, include = TRUE}
+```{r html_siblings_n, echo = FALSE, include = TRUE, dependson=siblings}
 html_siblings_n <-
   siblings_n %>%
   create_kable_filt_at(
@@ -222,13 +165,13 @@ html_siblings_n <-
   )
 html_siblings_n
 ```
-I was dissapointed to find that my twin brother and I were not at
+Admittedly, I am a bit disappointed to find that my twin brother and I are not at
 the very top of this list. Nonetheless, we are fairly near the top, so I can take
 some satisfaction in that.
 
 I should say a couple of things about the previous table.
 
-+ I don't explicilty try to filter for twins only, but it's reasonable to believe
++ I don't explicitly try to filter for twins only, but it's reasonable to believe
 that many, if not most, are twins.
 
 + The table enforces the criteria that the siblings compete
@@ -241,7 +184,7 @@ when throwing out the criteria for same year.
 For example, see the following counts for this relaxed criteria for sibling
 participation.
 
-```{r siblings_lax, include = FALSE, eval = FALSE}
+```{r siblings_lax, include = FALSE}
 # NOTE: Probably should remove this.
 siblings_lax <-
   persons_uil %>%
@@ -259,12 +202,12 @@ siblings_lax_n <-
 siblings_lax_n
 ```
 
-```{r html_siblings_lax_n, echo = FALSE, include = TRUE}
+```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dependson=-1}
 html_siblings_lax_n <-
   siblings_lax_n %>%
   create_kable_filt_at(
     config = config,
-    col_rgx = "name_last",
+    col_rgx = "name_last"
   )
 html_siblings_lax_n
 ```
@@ -273,10 +216,10 @@ html_siblings_lax_n
 
 Participation in competitions is one thing, but what about sibling performance?
 Let's use the same metric used elsewhere for ranking performance--percent rank of
-scores summed accross all records (`prnk_sum`)--and see which sibling pairs
+scores summed across all records (`prnk_sum`)--and see which sibling pairs
 show up among the top.
 
-```{r siblings_prnk, include = FALSE}
+```{r siblings_prnk, include = FALSE, dependson=siblings}
 siblings_prnk <-
   siblings %>%
   select(matches("^name|^prnk")) %>%
@@ -289,31 +232,31 @@ siblings_prnk <-
 siblings_prnk
 ```
 
-```{r html_siblings_prnk, echo = FALSE, include = TRUE}
+```{r html_siblings_prnk, echo = FALSE, include = TRUE, dependson=-1}
 html_siblings_prnk <-
   siblings_prnk %>%
   create_kable_filt_at(
     config = config,
-    col_rgx = "name_last",
+    col_rgx = "name_last"
   )
 html_siblings_prnk
 ```
 
 It looks like the pairs at the top of these rankings based on score are fairly similar to the list
-of pairs competing most frequently. (This is not too suprising
+of pairs competing most frequently. (This is not too surprising
 given that my choice of metric of ranking is based on a summed value that "rewards"
 volume of participation rather than per-competition performance.) Again, my twin brother and I
 appear near the top.
 
 ## My High School
 
-Even though I highlighted my high school in my examination of schools and looked
+Even though I highlighted my high school ("CLEMENS") in my examination of schools and looked
 at individual scores elsewhere, I did not
 look at other individuals that have gone to my school. Perhaps it is a bit egotistical,
 but I am interested in knowing how I compare with others that have attended my school (either
 before, with, or after me).
 
-```{r persons_n_filt, include = FALSE}
+```{r persons_n_filt, include = FALSE, dependson=load}
 persons_n_filt <-
   persons_uil %>%
   group_by(name, school, conf) %>%
@@ -324,7 +267,7 @@ persons_n_filt <-
 persons_n_filt
 ```
 
-```{r html_persons_n_filt, echo = FALSE, include = TRUE}
+```{r html_persons_n_filt, echo = FALSE, include = TRUE, dependson=-1}
 html_persons_n_filt <-
   persons_n_filt %>% 
   create_kable_filt_at(
@@ -334,11 +277,15 @@ html_persons_n_filt <-
 html_persons_n_filt
 ```
 
-
-
 Alas, although my twin brother and I did not rank among the very top of the siblings
 by participation and performance, we do appear among the top 
 when evaluating only people from my high school. In my opinion, the sample size isn't so small
 that this achievement is trivial. 
 
+## Wrap-Up
+
+I think I've done probably more investigation of my personal performance
+throughout this series of write-up, so I'll spare the reader any more.
+And, with that said, I think this is a good point to bring an end to my
+investigation of Texas high school academic UIL competitions.
 

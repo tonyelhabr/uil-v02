@@ -18,12 +18,12 @@ get_config <- function(sort = TRUE) {
     list(
       export_data = TRUE,
       dir_data = "data",
-      export_viz = FALSE,
+      export_viz = TRUE,
       dir_viz = "figs",
       dir_scrape = "data-raw",
       ext_scrape = "csv",
       scrape = FALSE,
-      setup = TRUE,
+      setup = FALSE,
       years = seq(2004L, 2017L),
       confs = paste0(seq(1L, 6L), "A"),
       complvls_info =
@@ -65,7 +65,7 @@ get_config <- function(sort = TRUE) {
       path_functions_image = file.path("data", "functions.RData"),
       default_city = "unknown",
       default_complvl_num = 0,
-      n_rnk_html = 20,
+      n_rnk_html = 10,
       rgx_school_filt = "CLEMENS",
       rgx_name_filt = "El.*[Hh]ab.*Ant",
       rgx_name_last_filt = "El.*[Hh]ab"
@@ -103,6 +103,6 @@ sapply(paths_functions, source, .GlobalEnv)
 invisible(sapply(paths_functions, source, .GlobalEnv))
 
 config <- get_config()
-save.image(file = config$path_functions_image)
+# save.image(file = config$path_functions_image)
 # config <- get_params()
 # writeLines(yaml::as.yaml(config ), "_params.yml")

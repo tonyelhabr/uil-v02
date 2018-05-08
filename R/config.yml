@@ -38,9 +38,9 @@ dir_data: data
 dir_scrape: data-raw
 dir_viz: figs
 export_data: yes
-export_viz: no
+export_viz: yes
 ext_scrape: csv
-n_rnk_html: 20.0
+n_rnk_html: 10.0
 path_dl_uil: data-raw/temp.html
 path_functions_image: data/functions.RData
 path_persons_uil: data/persons-uil.csv
@@ -56,7 +56,7 @@ rgx_name_filt: El.*[Hh]ab.*Ant
 rgx_name_last_filt: El.*[Hh]ab
 rgx_school_filt: CLEMENS
 scrape: no
-setup: yes
+setup: no
 url_base_tea: https://tea.texas.gov/
 url_base_uil: https://www.hpscience.net/results/
 url_suffix_uil: .php

@@ -12,33 +12,26 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
   # echo = TRUE,
   echo = FALSE,
-  # cache = TRUE,
+  cache = TRUE,
   # include = FALSE,
   # results = "markdown",
   # results = "hide",
   fig.align = "center",
   # fig.show = "asis",
-  fig.width = 6,
-  fig.height = 6,
-  # out.width = 6,
-  # out.height = 6,
+  fig.width = 7,
+  fig.height = 7,
+  # out.width = 7,
+  # out.height = 7,
   warning = FALSE,
   message = FALSE
 )
 
 ```
 
-```{r funcs_general, include = FALSE}
-
-```
-
-
 ```{r load, include = FALSE}
 source(file.path("R", "config.R"))
-# load(config$path_analysis_image)
-
 schools_nces_join <-
-  config$path_schools_uil_nces_join %>%
+  config$path_schools_nces_join %>%
   teproj::import_path_cleanly()
 ```
 
@@ -117,7 +110,7 @@ conference, even as they advance.)
 https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer.)
 
 
-```{r viz_map_bycomplvl_grid}
+```{r viz_map_bycomplvl_grid, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
 visualize_map_bycomplvl <-
   function(data = NULL) {
     teplot::create_map_base_tx() +
