@@ -22,9 +22,24 @@ filter_rnk_or_rgx_at <-
            rgx = identify_rgx_from_params(config, col_rgx)) {
     # validate_nm(data, col_rnk)
     # validate_nm(data, col_rgx)
-    data %>%
-      filter(!!sym(col_rnk) <= n_rnk |
-               str_detect(!!sym(col_rgx), rgx))
+
+    if((col_rnk %in% names(data)) & (col_rgx %in% names(data))) {
+      ret <-
+        data %>%
+        filter(!!sym(col_rnk) <= n_rnk |
+                 str_detect(!!sym(col_rgx), rgx))
+    } else if (col_rnk %in% names(data)) {
+      ret <-
+        data %>%
+        filter(!!sym(col_rnk) <= n_rnk)
+    } else if (col_rgx %in% names(data)) {
+      ret <-
+        data %>%
+        filter(row_number() <= n_rnk | str_detect(!!sym(col_rgx), rgx))
+    } else {
+      ret <- data
+    }
+    ret
   }
 
 create_kable_filt_at <-
@@ -46,6 +61,7 @@ prettify_nums_for_kable <-
 add_stats_cols_by_at <-
   function(data = NULL,
            cols_grp = NULL,
+           rank = TRUE,
            col_rnk = "prnk_sum",
            na.rm = TRUE,
            rank_all = FALSE,
@@ -67,7 +83,7 @@ add_stats_cols_by_at <-
       ret <-
         ret %>%
         tetidy::rank_arrange_at(col_rnk, ...)
-    } else {
+    } else if (rank) {
       cols_rnk <-
         setdiff(names(ret), names(data))
       ret <-

@@ -10,6 +10,7 @@ output:
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
+  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
@@ -50,7 +51,7 @@ To give some context to the values for individual participants,
 I'll include the numbers for myself ("Elhabr, Anthony") in applicable contexts.
 </i>
 
-```{r person_n_top, include = FALSE}
+```{r person_n_top, include = FALSE, dep = c('load')}
 persons_n <-
   persons_uil %>%
   group_by(name, school, conf) %>%
@@ -60,13 +61,12 @@ persons_n <-
 persons_n
 ```
 
-```{r html_person_n, echo = FALSE, include = TRUE}
+```{r html_person_n, echo = FALSE, include = TRUE, dep = c('persons_n')}
 html_persons_n <-
   persons_n %>%
-  prettify_nums_for_kable() %>% 
   create_kable_filt_at(
     config = config,
-    col_rgx = "name",
+    col_rgx = "name"
   )
 html_persons_n
 ```
@@ -77,7 +77,7 @@ regarding the limits of individual participation.
 Given that counts of overall participation may not be indicative of anything directly,
 it may be a better idea to break them down by conference.
 
-```{r person_n_top_byconf, include = FALSE}
+```{r person_n_top_byconf, include = FALSE, dep = c('persons_n')}
 # n_top_conf <- 10000
 # n_top_conf <- nrow(persons_n)
 persons_n_top_byconf <-
@@ -90,10 +90,9 @@ persons_n_top_byconf <-
 persons_n_top_byconf
 ```
 
-```{r html_person_n_top_byconf, echo = FALSE, include = TRUE}
+```{r html_person_n_top_byconf, echo = FALSE, include = TRUE, dep = c(-1)}
 html_persons_n_top_byconf <-
   persons_n_top_byconf %>%
-  prettify_nums_for_kable() %>% 
   mutate_at(vars(n), funs(scales::comma)) %>%
   teproj::create_kable()
 html_persons_n_top_byconf
@@ -103,7 +102,7 @@ It seems that there are not as many individual competitors in the 6A conference 
 This seems to be true even when stratifying the individuals into groups of ranks (by
 count of individual participation).
 
-```{r viz_persons_n_top_byconf, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_persons_n_top_byconf, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('persons_n')}
 viz_persons_n_top_byconf <-
   persons_n %>%
   mutate(
@@ -158,7 +157,7 @@ by distinct individuals is greater. In fact, this is exactly what is observed. [
 [^previous]:
 See a separate write-up for a visual illustrating this phenomenon.
 
-```{r viz_persons_stats_byconf, include = FALSE, fig.show = "asis", , fig.height = 7, fig.width = 7, eval = FALSE}
+```{r viz_persons_stats_byconf, include = FALSE, s = "asis", , h = 7, w = 7, eval = FALSE}
 # TODO: Figure out a good way to include the previously generated visual.
 viz_persons_stats_bycompconf
 ```
@@ -175,7 +174,7 @@ the number of scores less that that of a given individual for a unique competiti
 and a unique competition is defined as a unique combination of 
 year, competition level, and competition type.
 
-```{r stats, include = FALSE}
+```{r stats, include = FALSE, dep = c('load')}
 persons_stats <-
   persons_uil %>%
   add_stats_cols_by_at(cols_grp = c("name", "school", "city"))
@@ -190,7 +189,6 @@ schools_stats <-
 html_persons_stats <-
   persons_stats %>%
   select(-n_advanced_sum, -n_state_sum) %>%
-  prettify_nums_for_kable() %>% 
   create_kable_filt_at(
     config = config,
     col_rgx = "name"
@@ -202,7 +200,7 @@ Also, I think it's interesting to look at the distribution of counts for
 competitors defeated, advancement, and state competition appearances. The heavily right skewed
 distribution of values gives an indication of the difficulty of succeeding consistently.
 
-```{r viz_persons_stats_n_x, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_persons_stats_n_x, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
 count_rename_at <-
   function(data = NULL, col = NULL, col_out = "value") {
     col <- sym(col)
@@ -271,7 +269,7 @@ teproj::export_ext_png(
 
 For comparison's sake, let's can visualize the same metrics aggregated at the school level.
 
-```{r viz_schools_stats_n_x, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_schools_stats_n_x, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
 viz_schools_stats_n_x <-
   stats_n_x %>% 
   filter(entity == "schools") %>% 
@@ -307,25 +305,28 @@ for a given competition type.
 [^eligibility]:
 The assumption here is that each student takes four years to complete high school.
 
-```{r persons_multi, include = FALSE}
+```{r persons_multi, include = FALSE, dep = c('load')}
 persons_multi <-
   persons_uil %>%
   count(name, school, city, conf, comp, complvl, complvl_num) %>% 
   filter(n > 1)
 ```
 
-```{r persons_n4, include = FALSE}
+```{r persons_n4, include = FALSE, dep = c(-1)}
 persons_n4 <-
   persons_multi %>% 
   filter(n == 4)
 ```
 
-```{r html_persons_n4_state, echo = FALSE, include = FALSE}
+```{r html_persons_n4_state, echo = FALSE, include = FALSE, dep = c(-1)}
 html_persons_n4_state <-
   persons_n4 %>%
   filter(complvl == "State") %>% 
   distinct(name, school, city, conf, comp) %>% 
-  create_kable()
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name"
+  )
 html_persons_n4_state
 ```
 
@@ -340,7 +341,10 @@ html_persons_n4_state_n2 <-
   distinct(name, school, city, conf, comp) %>% 
   count(name, school, city, conf, sort = TRUE) %>% 
   filter(n > 1) %>% 
-  create_kable(n_show = Inf)
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name",
+  )
 html_persons_n4_state_n2
 ```
 
@@ -394,7 +398,7 @@ based on summed percent ranks, might indicate that they are an above-average per
 The average may also be considered a valid means of aggregating the values for each individual.
 
 
-```{r persons_rnks, include = FALSE}
+```{r persons_rnks, include = FALSE, dep = c('load')}
 add_rnks_cols_by_at <-
   function(data = NULL,
            col = NULL,
@@ -424,12 +428,13 @@ persons_rnks <-
 persons_rnks
 ```
 
-```{r html_person_rnks, echo = FALSE, include = TRUE}
+```{r html_person_rnks, echo = FALSE, include = TRUE, dep = c(-1)}
 html_persons_rnks <-
   persons_rnks %>%
-  # mutate_if(is.numeric, funs(scales::comma)) %>% 
-  # prettify_nums_for_kable() %>% 
-  create_kable()
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name"
+  )
 html_persons_rnks
 ```
 
@@ -450,7 +455,7 @@ of percent ranks is not all too great--I found that the correlation between the
 two is anywhere between ~0.75 and ~0.95 when using either score percent rank
 or number of defeats as the metric for ranking.
 
-```{r persons_rnks_cors, include = FALSE}
+```{r persons_rnks_cors, include = FALSE, dep = c(-1)}
 correlate_rnks_at <-
   function(data = NULL, cols = str_subset(names(data), "^rnk_")) {
     data %>%
@@ -464,11 +469,11 @@ persons_rnks_cors <-
 persons_rnks_cors
 ```
 
-```{r html_persons_rnks_cors, echo = FALSE, include = TRUE}
+```{r html_persons_rnks_cors, echo = FALSE, include = TRUE, dep = c(-1)}
 html_persons_rnks_cors <-
   persons_rnks_cors %>%
-  prettify_nums_for_kable() %>% 
-  create_kable()
+  mutate_if(is.numeric, funs(round(., 4))) %>% 
+  teproj::create_kable()
 html_persons_rnks_cors
 ```
 
@@ -481,7 +486,7 @@ Although this kind of evaluation is dependent on the skill of each team
 (independent of the competition setting), I think that it is another interesting way of
 evaluating skill.
 
-```{r persons_stats_byschool, include = FALSE}
+```{r persons_stats_byschool, include = FALSE, dep = c('load')}
 n_ingroup_min <- 3
 persons_stats_byschool <-
   persons_uil %>%
@@ -498,7 +503,7 @@ persons_stats_byschool <-
 persons_stats_byschool
 ```
 
-```{r viz_comp_stats_byperson_byschool, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_comp_stats_byperson_byschool, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
 set.seed(42)
 pct_top_ingroup_diff_prnk <- 0.05
 viz_comp_stats_byperson_byschool <-
@@ -546,7 +551,7 @@ viz_comp_stats_byperson_byschool <-
                   100 * pct_top_ingroup_diff_prnk),
           "their teammates, according to differences in percent rank ",
           "of difference in individual score and average of teammates scores. ",
-          "Only unique school-competitions observations having",
+          "Only unique school-competitions observations having ",
           sprintf("at least %.0f team members are considered.", n_ingroup_min)
         ), 100
       )
@@ -592,7 +597,7 @@ score itself.
 I don't think it is relevant to require that the scores be in consecutive years,
 so I don't enforce that criteria.
 
-```{r persons_improve_n, include = FALSE}
+```{r persons_improve_n, include = FALSE, dep = c('load', 'persons_multi')}
 persons_improve <-
   persons_uil %>% 
   semi_join(persons_multi) %>% 
@@ -609,11 +614,14 @@ persons_improve_n <-
   count(improve)
 ```
 
-```{r html_persons_improve_n, echo = FALSE, include = TRUE}
+```{r html_persons_improve_n, echo = FALSE, include = TRUE, dep = c(-1)}
 html_persons_improve_n <-
   persons_improve_n %>% 
   mutate_if(is.numeric, scales::comma) %>% 
-  create_kable()
+  create_kable_filt_at(
+    config = config,
+    col_rgx = "name"
+  )
 html_persons_improve_n
 ```
 
@@ -628,7 +636,7 @@ is truly a 50 % - 50 % split. If the
 say 0.05--then we can deny the null hypothesis and say that there is a non-trivial
 trend of individual improvement.
 
-```{r persons_improve_btest, include = FALSE}
+```{r persons_improve_btest, include = FALSE, dep = c(-1)}
 persons_improve_n_c <- tibble::deframe(persons_improve_n)
 persons_improve_btest <-
   binom.test(persons_improve_n_c["TRUE"], sum(persons_improve_n_c)) %>% 
@@ -636,13 +644,13 @@ persons_improve_btest <-
 persons_improve_btest
 ```
 
-```{r html_persons_improve_btest, echo = FALSE, include = TRUE}
+```{r html_persons_improve_btest, echo = FALSE, include = TRUE, dep = c(-1)}
 html_persons_improve_btest <-
   persons_improve_btest %>%
   select(estimate, p.value, conf.low, conf.high) %>% 
   mutate_if(is.numeric, funs(round(., 4))) %>% 
   gather(metric, value) %>% 
-  create_kable()
+  teproj::create_kable()
 html_persons_improve_btest
 ```
 
@@ -652,7 +660,7 @@ Now, let's reduce the set to just those who have appeared in competitions at a g
 competition type four times (for the sake of visualization)
 and plot the scores across years for each individual.
 
-```{r viz_persons_n4, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_persons_n4, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load', 'persons_n4')}
 persons_n4_viz <-
   persons_uil %>% 
   semi_join(persons_n4) %>% 
@@ -699,7 +707,7 @@ viz_persons_n4
 teproj::export_ext_png(
   viz_persons_n4,
   export = config$export_viz,
-  dir = config$export_data,
+  dir = config$dir_viz,
   units = "in",
   height = 7,
   width = 7

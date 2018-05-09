@@ -1,6 +1,4 @@
 base
-devtools
-testthat
 tidyverse
 ggplot2
 tibble
@@ -14,5 +12,4 @@ rlang
 teplot
 teproj
 tetidy
-bindrcpp
 maps

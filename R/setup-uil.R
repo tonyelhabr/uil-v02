@@ -1,7 +1,5 @@
 
 
-stopifnot(config$setup)
-
 detect_clean_txt_at <-
   function(data = NULL,
            col = NULL,
@@ -237,15 +235,34 @@ add_name_cols_at <-
 
   }
 
+factor_complvls <-
+  function(x = NULL) {
+    factor(x, levels = c("District", "Region", "State"))
+  }
+
 add_advanced_col <-
-  function(data = NULL) {
+  function(data = NULL,
+           entity = c("schools", "persons"),
+           cols_grp_base = c("year", "school", "city", "conf", "comp")){
+
+    entity <- match.arg(entity)
+    if(entity == "schools") {
+      cols_grp <- cols_grp_base
+    } else if (entity == "persons") {
+      cols_grp <- c(cols_grp_base, "name")
+    }
+
     data %>%
-      group_by(year, school, city, conf, comp, comp) %>%
-      mutate(advanced = ifelse(complvl == "State",
-                               as.logical(NA),
-                               ifelse(!is.na(lead(
-                                 complvl, 1L
-                               )), 1L, 0L))) %>%
+      mutate_at(vars(complvl), funs(factor_complvls)) %>%
+      group_by(!!!syms(cols_grp_base)) %>%
+      mutate(
+        advanced =
+          ifelse(!is.na(lead(complvl, 1L)), 1L, 0L)) %>%
+          # ifelse(complvl == "State",
+          #        as.logical(NA),
+          #        ifelse(!is.na(lead(
+          #          complvl, 1L
+          #        )), 1L, 0L))) %>%
       ungroup()
   }
 
@@ -258,14 +275,16 @@ add_n_state_col <-
 
 add_calc_cols_by_at <-
   function(data = NULL,
+           entity = c("schools", "persons"),
            cols_grp = c("year",
                         "conf",
                         "complvl",
                         "complvl_num",
                         "comp")) {
+    entity <- match.arg(entity)
 
     data %>%
-      add_advanced_col() %>%
+      add_advanced_col(entity) %>%
       add_n_state_col() %>%
       group_by(!!!syms(cols_grp)) %>%
       mutate(n_bycomp = n(),
@@ -285,15 +304,13 @@ schools_scrape <-
 schools_uil <-
   schools_scrape %>%
   clean_scrape_data(config = config) %>%
-  add_calc_cols_by_at()
+  add_calc_cols_by_at(entity = "schools")
 
 schools_uil %>%
   teproj::export_path(
     path = config$path_schools_uil,
     export = config$export_data
   )
-
-
 
 # NOTE: Some additional fixes should be made to these schools_uil.
 schools_distinct <-
@@ -320,12 +337,16 @@ persons_scrape <-
   config$path_persons_uil_scrape %>%
   teproj::import_path_cleanly()
 
+
 persons_uil <-
   persons_scrape %>%
   clean_scrape_data(config = config) %>%
-  add_calc_cols_by_at() %>%
+  add_calc_cols_by_at(entity = "persons") %>%
   add_name_cols_at() %>%
   select(name, name_first, name_last, everything())
+
+persons_uil %>%
+  filter(str_detect(name, config$rgx_name_filt))
 
 persons_uil %>%
   teproj::export_path(

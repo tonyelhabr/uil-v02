@@ -10,6 +10,7 @@ output:
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
+  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
@@ -28,7 +29,7 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r load, include = FALSE, cache=FALSE}
+```{r load, include = FALSE}
 source(file.path("R", "config.R"))
 schools_uil <-
   config$path_schools_uil %>%
@@ -68,7 +69,7 @@ As in the analysis of individuals and schools, I'll include myself and my school
 where applicable.
 </i>
 
-```{r siblings_funcs, include = FALSE, cache=FALSE}
+```{r siblings_funcs, include = FALSE}
 add_name_first_pair_col <-
   function(data = NULL) {
     data %>% 
@@ -129,7 +130,7 @@ get_siblings_by_at <-
 ```
 
 
-```{r siblings, include = FALSE, dependson=load}
+```{r siblings, include = FALSE, dep = c('load')}
 siblings <-
   persons_uil %>%
   get_siblings_by_at(
@@ -144,7 +145,7 @@ siblings <-
   )
 ```
 
-```{r siblings_n, include = FALSE, dependson=siblings}
+```{r siblings_n, include = FALSE, dep = 'siblings'}
 siblings_n <-
   siblings %>% 
   group_by(name_last, name_first_pair) %>%
@@ -156,7 +157,7 @@ siblings_n <-
 
 ```
 
-```{r html_siblings_n, echo = FALSE, include = TRUE, dependson=siblings}
+```{r html_siblings_n, echo = FALSE, include = TRUE, dep = 'siblings'}
 html_siblings_n <-
   siblings_n %>%
   create_kable_filt_at(
@@ -202,7 +203,7 @@ siblings_lax_n <-
 siblings_lax_n
 ```
 
-```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dependson=-1}
+```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dep = c(-1)}
 html_siblings_lax_n <-
   siblings_lax_n %>%
   create_kable_filt_at(
@@ -219,7 +220,7 @@ Let's use the same metric used elsewhere for ranking performance--percent rank o
 scores summed across all records (`prnk_sum`)--and see which sibling pairs
 show up among the top.
 
-```{r siblings_prnk, include = FALSE, dependson=siblings}
+```{r siblings_prnk, include = FALSE, dep = 'siblings'}
 siblings_prnk <-
   siblings %>%
   select(matches("^name|^prnk")) %>%
@@ -232,7 +233,7 @@ siblings_prnk <-
 siblings_prnk
 ```
 
-```{r html_siblings_prnk, echo = FALSE, include = TRUE, dependson=-1}
+```{r html_siblings_prnk, echo = FALSE, include = TRUE, dep = c(-1)}
 html_siblings_prnk <-
   siblings_prnk %>%
   create_kable_filt_at(
@@ -256,18 +257,20 @@ look at other individuals that have gone to my school. Perhaps it is a bit egoti
 but I am interested in knowing how I compare with others that have attended my school (either
 before, with, or after me).
 
-```{r persons_n_filt, include = FALSE, dependson=load}
+```{r persons_n_filt, include = FALSE, dep = c('load')}
 persons_n_filt <-
   persons_uil %>%
-  group_by(name, school, conf) %>%
-  summarise(n = n()) %>%
-  ungroup() %>% 
+  # group_by(name, school, conf) %>%
+  # summarise(n = n()) %>%
+  # ungroup() %>% 
+  add_stats_cols_by_at(cols_grp = c("name", "school", "city")) %>% 
   filter(str_detect(school, config$rgx_school_filt)) %>%
-  tetidy::rank_arrange_at("n")
+  tetidy::rank_arrange_at("prnk_sum") %>% 
+  select(-school, -city)
 persons_n_filt
 ```
 
-```{r html_persons_n_filt, echo = FALSE, include = TRUE, dependson=-1}
+```{r html_persons_n_filt, echo = FALSE, include = TRUE, dep = c(-1)}
 html_persons_n_filt <-
   persons_n_filt %>% 
   create_kable_filt_at(

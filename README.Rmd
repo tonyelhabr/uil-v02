@@ -12,11 +12,11 @@ The `figs/` directory also contains some of the visualizations in the post.
 The documents can be recreated with the following commands:
 
 ```{r render, eval = FALSE}
-rmarkdown::render("R/01-intro.Rmd", output_dir = "output")
-rmarkdown::render("R/02-analyze-comps.Rmd", output_dir = "output")
-rmarkdown::render("R/03-analyze-persons.Rmd", output_dir = "output")
-rmarkdown::render("R/04-analyze-schools.Rmd", output_dir = "output")
-rmarkdown::render("R/05-analyze-misc.Rmd", output_dir = "output")
+rmarkdown::render("R/01-intro.Rmd", output_dir = "output", intermediates_dir = "output")
+rmarkdown::render("R/02-analyze-comps.Rmd", output_dir = "output", intermediates_dir = "output")
+rmarkdown::render("R/03-analyze-persons.Rmd", output_dir = "output", intermediates_dir = "output")
+rmarkdown::render("R/04-analyze-schools.Rmd", output_dir = "output", intermediates_dir = "output")
+rmarkdown::render("R/05-analyze-misc.Rmd", output_dir = "output", intermediates_dir = "output")
 ```
 
 # Highlights

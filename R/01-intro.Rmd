@@ -10,6 +10,7 @@ output:
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
+  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
@@ -25,7 +26,6 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
-
 ```
 
 ```{r load, include = FALSE}
@@ -53,7 +53,7 @@ schools_nces_join <-
 <!--<div class="toggle"><button>Show</button>-->
 
 __NOTE:__
-
+<i>
 This is part of a series of write-ups discussing my findings of
 [Texas high school academic University Interscholastic Scholarship (UIL) competitions](http://www.uiltexas.org/academics).
 See the first write-up [here](/posts/2018-05-13-analysis-texas-high-schools_uil-academics-r).
@@ -64,7 +64,7 @@ I have decided not to show the underlying code
 can be viewed on [my GitHub account](https://github.com/tonyelhabr). In the future, I may write some
 some kind of addendum to demonstrate some of the programming implementation that I
 think is notable in some way.
-
+</i>
 <!--</div>-->
 
 ## Introduction
@@ -110,7 +110,7 @@ conference, even as they advance.)
 https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer.)
 
 
-```{r viz_map_bycomplvl_grid, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_map_bycomplvl_grid, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load')}
 visualize_map_bycomplvl <-
   function(data = NULL) {
     teplot::create_map_base_tx() +

@@ -55,8 +55,8 @@ path_schools_uil_scrape: data-raw/schools-uil-scrape.csv
 rgx_name_filt: El.*[Hh]ab.*Ant
 rgx_name_last_filt: El.*[Hh]ab
 rgx_school_filt: CLEMENS
-scrape: no
-setup: no
+scrape: yes
+setup: yes
 url_base_tea: https://tea.texas.gov/
 url_base_uil: https://www.hpscience.net/results/
 url_suffix_uil: .php

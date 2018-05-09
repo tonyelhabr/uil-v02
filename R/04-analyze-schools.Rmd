@@ -10,6 +10,7 @@ output:
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
+  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
@@ -66,13 +67,13 @@ For the same reason stated before for showing my own scores among the individual
 I'll include the numbers for my high school ("CLEMENS") in applicable contexts.
 </i>
 
-```{r schools_stats, include = FALSE}
+```{r schools_stats, include = FALSE, dep = c('load')}
 schools_stats <-
   schools_uil %>%
   add_stats_cols_by_at(cols_grp = c("school", "city"))
 ```
 
-```{r html_schools_stats_filt, echo = FALSE, include = TRUE}
+```{r html_schools_stats_filt, echo = FALSE, include = TRUE, dep = c(-1)}
 html_schools_stats_filt <-
   schools_stats %>%
   mutate_if(is.numeric, funs(round(., 2))) %>%
@@ -90,7 +91,7 @@ the magnitude of performance metric values aggregated at the school level.
 To begin gaining some better understanding this list of top-performing schools,
 let's break down school performance by year.
 
-```{r schools_stats_byyear, include = FALSE}
+```{r schools_stats_byyear, include = FALSE, dep = c('load')}
 schools_stats_byyear <-
   schools_uil %>%
   add_stats_cols_by_at(cols_grp = c("school", "city", "year"))
@@ -100,7 +101,7 @@ schools_stats_byyear
 Also, let's combine the performance metric values
 with coordinate data to visualize where the best schools are located.
 
-```{r html_schools_stats_byyear, echo = FALSE, include = TRUE, eval = FALSE}
+```{r html_schools_stats_byyear, echo = FALSE, include = TRUE, dep = c(-1), eval = FALSE}
 html_schools_stats_byyear <-
   schools_stats_byyear %>%
   mutate_if(is.numeric, funs(round(., 2))) %>%
@@ -111,7 +112,7 @@ html_schools_stats_byyear <-
 html_schools_stats_byyear
 ```
 
-```{r visualize_map_tier3_at, include = FALSE}
+```{r visualize_map_tier3_at, include = FALSE, dep = c('load')}
 add_tier3_lab_cols_at <-
   function(data = NULL,
            col = "rnk",
@@ -305,15 +306,15 @@ do_visualize_map_tier3 <-
 
 Now, let's visualize school dominance across years.
 
-```{r viz_map_schools_stats_tier3_byyear, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_map_schools_stats_tier3_byyear, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = 'schools_stats_byyear'}
 viz_map_schools_stats_tier3_byyear <-
   schools_stats_byyear %>% 
   group_by(year) %>% 
   do_visualize_map_tier3(col_frame = "year")
-gganimate::gganimate(
-  viz_map_schools_stats_tier3_byyear,
-  interval = 0.5
-)
+# gganimate::gganimate(
+#   viz_map_schools_stats_tier3_byyear,
+#   interval = 0.5
+# )
 if(config$export_viz) {
   # gganimate::gganimate_save(
   gganimate::gganimate(
@@ -327,9 +328,15 @@ if(config$export_viz) {
 }
 ```
 
+```{r eval = FALSE, echo = FALSE}
+# ![](../figs/viz_map_tier3_byyear.gif))
+```
+
+![](../figs/viz_map_tier3_byyear.gif)
+
 Now, if we aggregate across years (as we did before), who and where are the best of the best?
 
-```{r viz_map_schools_stats_tier3, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_map_schools_stats_tier3, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = 'school_stats'}
 viz_map_schools_stats_tier3 <-
   schools_stats %>%
   do_visualize_map_tier3()
@@ -389,7 +396,7 @@ $$
 Note that, because this formula is applied to each school-competition type pair,
 the intercept term corresponds to the school entity itself.
 
-```{r schools_stats_bycomp_terms, include = FALSE}
+```{r schools_stats_bycomp_terms, include = FALSE, dep = c('load')}
 fmla_fit <- formula(prnk_sum ~ year_idx + lag(prnk_sum, 1))
 schools_stats_bycomp_terms <-
   schools_uil %>%
@@ -412,7 +419,7 @@ schools_stats_bycomp_terms <-
 schools_stats_bycomp_terms
 ```
 
-```{r viz_schools_stats_bycomp_pv, echo = FALSE, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_schools_stats_bycomp_pv, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
 convert_formula_to_chr <-
   function(formula = NULL) {
     stopifnot(is_formula(formula))
@@ -470,7 +477,7 @@ of school performance in a given competition type in any given year.
 while year itself is not (meaning that there is no temporal trend indicating that performance
 improves or worsens over time). 
 However, my other thought that school itself has some kind of predictive value
-does _not_ appear to be true.
+does __not__ appear to be true.
 [^robinson]
 
 [^robinson]:
@@ -485,7 +492,7 @@ The distribution of the percentage of possible opponent schools
 defeated at each competition level for each school should re-inforce this inference.
 
 
-```{r viz_schools_n_defeat_pct, include = TRUE, fig.show = "asis", fig.height = 7, fig.width = 7}
+```{r viz_schools_n_defeat_pct, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load')}
 schools_n_defeat <-
   schools_uil %>% 
   group_by(comp, conf, complvl, year) %>% 
@@ -500,8 +507,8 @@ viz_schools_n_defeat_pct <-
   ungroup() %>% 
   ggplot(aes(x = n_defeat_pct)) +
   geom_histogram(bins = 20) +
+  scale_x_continuous(labels = scales::percent) +
   facet_wrap( ~ complvl, scales = "free_y") +
-  teplot::theme_te_facet_dx() +
   teplot::theme_te_facet_dx() +
   labs(
     title = "School-Specific Average % of Total Possible Competitors Defeated, by Competition Level",
