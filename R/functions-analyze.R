@@ -4,22 +4,22 @@
 #     stopifnot(length(intersect(names(data), nm)) == 1)
 #   }
 
-identify_rgx_from_params <-
+identify_rgx_from_config <-
   function(config = NULL, col_rgx = NULL) {
     nm <- sprintf("rgx_%s_filt", col_rgx)
     # validate_nm(data, nm)
     ret <- config[[nm]]
     ret
   }
-# identify_rgx_from_params(config, col_rgx = "name")
-# identify_rgx_from_params(config, col_rgx = "name_last")
+# identify_rgx_from_config(config, col_rgx = "name")
+# identify_rgx_from_config(config, col_rgx = "name_last")
 filter_rnk_or_rgx_at <-
   function(data = NULL,
            config = NULL,
            col_rnk = "rnk",
            n_rnk = config$n_rnk_html,
            col_rgx = "name_last",
-           rgx = identify_rgx_from_params(config, col_rgx)) {
+           rgx = identify_rgx_from_config(config, col_rgx)) {
     # validate_nm(data, col_rnk)
     # validate_nm(data, col_rgx)
 
@@ -43,19 +43,12 @@ filter_rnk_or_rgx_at <-
   }
 
 create_kable_filt_at <-
-  function(data, format = "html", ...) {
+  function(data = NULL, format = "html", ...) {
+    n_footnote <- nrow(data)
     data %>%
       filter_rnk_or_rgx_at(...) %>%
-      teproj::create_kable(n_show = Inf, format = format)
+      teproj::create_kable(n_show = Inf, show_footnote = TRUE, n_footnote = n_footnote, format = format)
 
-  }
-
-
-prettify_nums_for_kable <-
-  function(data = NULL) {
-    data %>%
-      mutate_if(is.numeric, funs(round(., 2))) # %>%
-    # mutate_if(is.numeric, funs(scales::comma))
   }
 
 add_stats_cols_by_at <-

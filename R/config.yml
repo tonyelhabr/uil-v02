@@ -39,7 +39,6 @@ dir_scrape: data-raw
 dir_viz: figs
 export_data: yes
 export_viz: yes
-ext_scrape: csv
 n_rnk_html: 10.0
 path_dl_uil: data-raw/temp.html
 path_functions_image: data/functions.RData
@@ -48,20 +47,15 @@ path_persons_uil_scrape: data-raw/persons-uil-scrape.csv
 path_schools_nces: data/schools-nces.csv
 path_schools_nces_join: data/schools-nces-join.csv
 path_schools_nces_raw: data-raw/EDGE_GEOCODE_PUBLICSCH_1516.xlsx
-path_schools_tea: data/schools-tea.csv
-path_schools_tea_raw: data-raw/schools-tea-scrape.csv
 path_schools_uil: data/schools-uil.csv
 path_schools_uil_scrape: data-raw/schools-uil-scrape.csv
 rgx_name_filt: El.*[Hh]ab.*Ant
 rgx_name_last_filt: El.*[Hh]ab
 rgx_school_filt: CLEMENS
-scrape: yes
-setup: yes
-url_base_tea: https://tea.texas.gov/
 url_base_uil: https://www.hpscience.net/results/
 url_suffix_uil: .php
-url_tea: https://tea.texas.gov/acctres/sat_act_index.html
-xpath_tea: //tr //td //a
+viz_footer: |
+  By: Tony ElHabr. Data source: https://www.hpscience.net/.
 xpath_uil: /html/body/table
 years:
 - 2004

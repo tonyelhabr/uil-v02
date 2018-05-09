@@ -1,24 +1,22 @@
 ---
-author: ""
+author: "Tony ElHabr"
 date: ""
 title: ""
 output:
   html_document:
-    toc: false
+    toc: true
+    theme: simplex
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
-  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
   # include = FALSE,
-  # results = "markdown",
-  # results = "hide",
   fig.align = "center",
-  # fig.show = "asis",
+  # results = "asis",
   fig.width = 7,
   fig.height = 7,
   # out.width = 7,
@@ -31,6 +29,7 @@ knitr::opts_chunk$set(
 
 ```{r load, include = FALSE}
 source(file.path("R", "config.R"))
+config <- get_config()
 schools_uil <-
   config$path_schools_uil %>%
   teproj::import_path_cleanly()
@@ -123,10 +122,10 @@ scale_fill_set1 <- function() {
 
 Some of the first questions that might come to mind are those regarding the 
 number of schools
-in each level of competition (i.e. District, Region, and State) and each 
+in each level of competition (include.echo. District, Region, and State) and each 
 conference classification level (1A, 2A, ... 6A).
 
-```{r summ_n_bycomplvl, include = FALSE, dep = c('load')}
+```{r summ_n_bycomplvl, include = FALSE, dependson = c("load")}
 summ_n_bycomplvl <-
   bind_rows(
     schools_uil %>%
@@ -141,7 +140,7 @@ summ_n_bycomplvl <-
   )
 ```
 
-```{r viz_n_bycomplvl, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load', 'summ_n_bycomplvl')}
+```{r viz_n_bycomplvl, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "summ_n_bycomplvl")}
 viz_n_bycomplvl <-
   summ_n_bycomplvl %>%
   ggplot(aes(x = complvl_num, y = n)) +
@@ -160,14 +159,17 @@ viz_n_bycomplvl <-
   labs(
     title = "Count of Schools by Different UIL Groups",
     caption =
-      str_wrap(
-        paste0(
-          "Dashed line: average for each grouping. ",
-          "Note that these groupings are not subsets of the same \"parent\" group. ",
-          "(Rather, they are different groupings of all schools .",
-          "District and Region are references to competition levels,",
-          " while conference is a classification based on school size.) ",
-          "State is not shown because there is no \"subgroup\" of it."
+      paste0(
+        config$viz_footer,
+        str_wrap(
+          paste0(
+            "Dashed line: average for each grouping. ",
+            "Note that these groupings are not subsets of the same \"parent\" group. ",
+            "(Rather, they are different groupings of all schools .",
+            "District and Region are references to competition levels,",
+            " while conference is a classification based on school size.) ",
+            "State is not shown because there is no \"subgroup\" of it."
+          )
         ),
         100
       )
@@ -201,10 +203,10 @@ of data. Nevertheless, these different "groupings" each stratify the sample popu
 
 With some context regarding the number of schools in each competition level and in conference,
 let's now consider the number of distinct individual competitors and schools for each
-competition type (i.e. Calculator, Computer Science, etc.)
+competition type (include.echo. Calculator, Computer Science, etc.)
 
 
-```{r summ_n_bycomp, include = FALSE, dep = c('load')}
+```{r summ_n_bycomp, include = FALSE, dependson = c("load")}
 summ_n_bycomp <-
   bind_rows(
     schools_uil %>%
@@ -217,11 +219,7 @@ summ_n_bycomp <-
 
 ```
 
-```{r scale_x_set1_funcs, include = FALSE}
-
-```
-
-```{r visualize_n_bycomp_common_at, include = FALSE, dep = c('load')}
+```{r visualize_n_bycomp_common_at, include = FALSE, dependson = c("load")}
 visualize_n_bycomp_common_at <-
   function(data = NULL,
            x = "comp",
@@ -258,7 +256,7 @@ visualize_n_bycomp_common_at <-
 #   )
 ```
 
-```{r viz_n_bycomp, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = 'summ_n_bycomp'}
+```{r viz_n_bycomp, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "summ_n_bycomp")}
 viz_n_bycomp <-
   summ_n_bycomp %>%
   visualize_n_bycomp_common_at(col_grp = "entity") +
@@ -266,7 +264,7 @@ viz_n_bycomp <-
   theme(axis.text.x = element_blank()) +
   labs(
     title = "Count of Entities for Each Competition Type",
-    subtitle = NULL
+    caption = config$viz_footer
   )
 viz_n_bycomp
 
@@ -284,7 +282,7 @@ Science stands out when evaluating participation by competition type alone.
 
 But what about when considering competition level as well?
 
-```{r summ_n_bycompcomplvl, include = FALSE, dep = c('load')}
+```{r summ_n_bycompcomplvl, include = FALSE, dependson = c("load")}
 summ_n_bycompcomplvl <-
   bind_rows(
     schools_uil %>%
@@ -298,7 +296,7 @@ summ_n_bycompcomplvl <-
 ```
 
 
-```{r viz_n_bycompcomplvl, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load', 'summ_n_bycompcomplvl')}
+```{r viz_n_bycompcomplvl, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "summ_n_bycompcomplvl")}
 viz_n_bycompcomplvl <-
   summ_n_bycompcomplvl %>%
   visualize_n_bycomp_common_at(col_grp = "complvl_entity") +
@@ -306,7 +304,7 @@ viz_n_bycompcomplvl <-
   theme(axis.text.x = element_blank()) +
   labs(
     title = "Count of Entities for Each Competition Type and Level",
-    subtitle = NULL
+    caption = config$viz_footer
   )
 viz_n_bycompcomplvl
 
@@ -324,7 +322,7 @@ Science seems to prevail again.
 
 Now, what about when also considering conferences?
 
-```{r summ_n_bycompcomplvlconf, include = FALSE, dep = c('load')}
+```{r summ_n_bycompcomplvlconf, include = FALSE, dependson = c("load")}
 summ_n_bycompcomplvlconf <-
   bind_rows(
     schools_uil %>%
@@ -338,7 +336,7 @@ summ_n_bycompcomplvlconf <-
 summ_n_bycompcomplvlconf
 ```
 
-```{r viz_n_bycompcomplvlconf, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load', 'summ_n_bycompcomplvlconf')}
+```{r viz_n_bycompcomplvlconf, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "summ_n_bycompcomplvlconf")}
 viz_n_bycompcomplvlconf <-
   summ_n_bycompcomplvlconf %>%
   filter(entity == "Competitors") %>%
@@ -347,7 +345,7 @@ viz_n_bycompcomplvlconf <-
   facet_grid(complvl ~ comp, scales = "free", labeller = label_wrap_gen(width = 12)) +
   labs(
     title = "Count of Competition for Each Competition Type,\nLevel, and Conference",
-    subtitle = NULL,
+    caption = config$viz_footer,
     x = "Conference"
   ) +
   theme(legend.position = "none")
@@ -373,7 +371,7 @@ With an understanding of the participation in the UIL competitions,
 let's now consider the scores. What does the distribution of scores
 for each competition type look like?
 
-```{r persons_stats_bycomp, include = FALSE, dep = c('load')}
+```{r persons_stats_bycomp, include = FALSE, dependson = c("load")}
 summarise_stats_score_by_at <-
   function(data = NULL,
            col = "score",
@@ -389,7 +387,7 @@ persons_stats_bycomp <-
 persons_stats_bycomp
 ```
 
-```{r viz_persons_stats_bycomp, echo = FALSE, include = TRUE, s = "asis", w = 7, h = 10, dep = c('load', 'persons_stats_bycomp')}
+```{r viz_persons_stats_bycomp, echo = FALSE, include = TRUE, fig.width = 7, fig.height = 10, dependson = c("load", "persons_stats_bycomp")}
 n_comps <- length(config$comps_info_list)
 q05_min <- min(persons_stats_bycomp$q05)
 q95_max <- max(persons_stats_bycomp$q95)
@@ -397,7 +395,10 @@ q95_max <- max(persons_stats_bycomp$q95)
 lab_title_stats_bycomp_prefix <-
   "Distribution of Scores for Each Competition Type"
 lab_caption_stats_bycomp <-
-  "Dashed line: mean. Solid lines: z-score = -1 and 1."
+  paste0(
+    config$viz_footer,
+    str_wrap("Dashed line: mean. Solid lines: z-score = -1 and 1.", 60)
+  )
 
 viz_persons_stats_bycomp <-
   persons_uil %>%
@@ -458,7 +459,7 @@ see a right- or left-skewed distribution if the test is not robust.)
 To try to understand the score distributions better, let's break them
 down by year, competition level, and conference.
 
-```{r persons_stats_bycompx, include = FALSE, dep = c('load')}
+```{r persons_stats_bycompx, include = FALSE, dependson = c("load")}
 persons_stats_bycompyear <-
   persons_uil %>%
   summarise_stats_score_by_at(cols_grp = c("comp", "year"))
@@ -472,7 +473,7 @@ persons_stats_bycompconf <-
   summarise_stats_score_by_at(cols_grp = c("comp", "conf"))
 ```
 
-```{r viz_persons_stats_bycompx, include = FALSE, s = "hide", dep = c('load', 'persons_stats_bycompx')}
+```{r viz_persons_stats_bycompx, include = FALSE, results = "hide", dependson = c("load", "persons_stats_bycompx")}
 visualize_persons_stats_bycompx_at <-
   function(data = NULL, x = NULL) {
     # Using facet_wrap() so strip.position can be specified.
@@ -539,12 +540,12 @@ teproj::export_ext_png(
 )
 ```
 
-```{r viz_persons_stats_bycomp_grid, echo = FALSE, include = TRUE, s = "asis", h = 10, w = 7, dep = c('load', 'viz_persons_stats_bycompx')}
+```{r viz_persons_stats_bycomp_grid, echo = FALSE, include = TRUE, fig.height = 10, fig.width = 7, dependson = c("load", "viz_persons_stats_bycompx")}
 viz_persons_stats_bycomp_grid <-
   gridExtra::arrangeGrob(
     viz_persons_stats_bycompyear + theme(strip.text = element_blank()),
-    viz_persons_stats_bycompcomplvl + theme(strip.text = element_blank()) + labs(title = "", caption = ""),
-    viz_persons_stats_bycompconf + labs(title = "", caption = ""),
+    viz_persons_stats_bycompcomplvl + theme(strip.text = element_blank()) + labs(title = "", caption = " \n "),
+    viz_persons_stats_bycompconf + labs(title = "", caption = " \n "),
     ncol = 3
   )
 gridExtra::grid.arrange(viz_persons_stats_bycomp_grid)
@@ -580,7 +581,7 @@ This could be indicative of a number of factors:
         
     - In an effort to compete in as many different competition types as
     possible and/or reach the minimum number of individual competitors needed to qualify
-    the school as a team (e.g. at least 3 individuals), 
+    the school as a team (echo.g. at least 3 individuals), 
     scmaller schools push individuals to participate in competitions
     even if they are not really prepared to do so.
     (This might be considered a form of [selection bias](https://en.wikipedia.org/wiki/Selection_bias).)
@@ -604,7 +605,7 @@ across competition levels,
 there would be an aggregate increase in scores
 with increasing competition level (because only the top scoring individuals and schools advance).
 
-```{r persons_stats_bycompcomplvl_diffs, include = FALSE, dep = c('load', 'persons_stats_bycompx')}
+```{r persons_stats_bycompcomplvl_diffs, include = FALSE, dependson = c("load", "persons_stats_bycompx")}
 persons_stats_bycompcomplvl_diffs <-
   persons_stats_bycompcomplvl %>%
   group_by(comp) %>%
@@ -636,7 +637,7 @@ persons_stats_bycompcomplvl_diffs_tidy <-
   arrange(comp)
 ```
 
-```{r viz_persons_stats_bycompcomplvl_diffs, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load', 'persons_stats_bycompcomplvl_diffs')}
+```{r viz_persons_stats_bycompcomplvl_diffs, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_stats_bycompcomplvl_diffs")}
 viz_persons_stats_bycompcomplvl_diffs <-
   persons_stats_bycompcomplvl_diffs_tidy  %>%
   mutate_at(
@@ -654,8 +655,8 @@ viz_persons_stats_bycompcomplvl_diffs <-
   teplot::theme_te_facet_dx() +
   theme(axis.text.x = element_blank()) +
   teplot::labs_xy_null() +
-  labs(title = "% Change in Score Distributions for Each Competition Type",
-       subtitle = "By Competition Level")
+  labs(title = str_wrap("% Change in Score Distributions for Each Competition Type, By Competition Level", 60),
+       caption = config$viz_footer)
 viz_persons_stats_bycompcomplvl_diffs
 
 teproj::export_ext_png(
@@ -687,13 +688,13 @@ Consequently, with increasing competition level, it is more likely that these
 "superior" competitors stand out, and, as observed here, cause the
 the scoring distributions to skew higher.
 
-So there _does_ seem to be a trend of higher scores with higher competition level,
-but has _that_ trend changed over time? [^trend]
+So there __does__ seem to be a trend of higher scores with higher competition level,
+but has __that__ trend changed over time? [^trend]
 
 [^trend]:
 Recall that there is no apparent trend when not distinguishing by competition level.
 
-```{r persons_stats_bycompyear_terms, include = FALSE, dep = c('load', 'persons_stats_bycompx')}
+```{r persons_stats_bycompyear_terms, include = FALSE, dependson = c("load", "persons_stats_bycompx")}
 persons_stats_bycompyear_diffs <-
   persons_stats_bycompyear %>%
   mutate_at(vars(mean, median, sd), funs(diff_pct = diff(c(NA, .)) / .))
@@ -712,7 +713,15 @@ persons_stats_bycompyear_terms <-
 persons_stats_bycompyear_terms
 ```
 
-```{r viz_persons_stats_bycompyear_diffs, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load', 'persons_stats_bycompyear_terms')}
+```{r viz_persons_stats_bycompyear_diffs, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_stats_bycompyear_terms")}
+lab_caption_persons_stats_bycompyear_diffs <-
+  paste0(
+    config$viz_footer,
+    str_wrap(
+      "Dashed line: Competition-specific average year-to-year difference percentage."
+    ),
+    100
+  )
 viz_persons_stats_bycompyear_diffs <-
   persons_stats_bycompyear_diffs %>%
   ggplot(aes(x = year, y = mean_diff_pct)) +
@@ -733,7 +742,7 @@ viz_persons_stats_bycompyear_diffs <-
   teplot::labs_xy_null() +
   labs(title = lab_title_stats_bycomp_prefix,
        subtitle = "By Year",
-       caption = "Dashed line: Competition-specific average year-to-year difference percentage.")
+       caption = lab_caption_persons_stats_bycompyear_diffs)
 viz_persons_stats_bycompyear_diffs
 
 teproj::export_ext_png(
@@ -760,16 +769,16 @@ Observe the
 for [linear regression](https://en.wikipedia.org/wiki/Linear_regression)
 models fit for each competition type,
 where the average year-to-year score difference (as a percentage) is estimated given
-average competition-specific score and year. Taking the customary p-value threshhold of 0.05
+average competition-specific score and year. Taking the customary p-value threshold of 0.05
 as the level of significance (where one may deduce that the
-model is not predictive if the the p.value is greater than the thresshold value), the year term
+model is not predictive if the the p.value is greater than the threshold value), the year term
 is shown to be insignificant.
 
 $$
 mean \space year \space diff \space pct = intercept + mean * \beta_{1} + year * \beta_{2}
 $$
 
-```{r html_persons_stats_bycompyear_terms, echo = FALSE, include = TRUE, dep = c('load', 'persons_stats_bycompyear_terms')}
+```{r html_persons_stats_bycompyear_terms, echo = FALSE, include = TRUE, dependson = c("load", "persons_stats_bycompyear_terms")}
 html_persons_stats_bycompyear_terms <-
   persons_stats_bycompyear_terms %>%
   # filter(term == "year") %>%

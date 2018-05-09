@@ -1,24 +1,22 @@
 ---
-author: ""
+author: "Tony ElHabr"
 date: ""
 title: ""
 output:
   html_document:
-    toc: false
+    toc: true
+    theme: simplex
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
-  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
   # include = FALSE,
-  # results = "markdown",
-  # results = "hide",
   fig.align = "center",
-  # fig.show = "asis",
+  # results = "asis",
   fig.width = 7,
   fig.height = 7,
   # out.width = 7,
@@ -26,13 +24,7 @@ knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE
 )
-```
 
-```{r load, include = FALSE}
-source(file.path("R", "config.R"))
-schools_nces_join <-
-  config$path_schools_nces_join %>%
-  teproj::import_path_cleanly()
 ```
 
 <style>
@@ -44,11 +36,21 @@ schools_nces_join <-
   height: auto;
 }
 </style>
+
 <script>
   $(".toggle").click(function() {
     $(this).toggleClass("open");
   });
 </script>
+
+```{r load, include = FALSE}
+source(file.path("R", "config.R"))
+config <- get_config()
+schools_nces_join <-
+  config$path_schools_nces_join %>%
+  teproj::import_path_cleanly()
+```
+
 
 <!--<div class="toggle"><button>Show</button>-->
 
@@ -56,7 +58,6 @@ __NOTE:__
 <i>
 This is part of a series of write-ups discussing my findings of
 [Texas high school academic University Interscholastic Scholarship (UIL) competitions](http://www.uiltexas.org/academics).
-See the first write-up [here](/posts/2018-05-13-analysis-texas-high-schools_uil-academics-r).
 
 To keep this and the other write-ups concise and to focus reader attention on the content,
 I have decided not to show the underlying code
@@ -72,14 +73,14 @@ think is notable in some way.
 Ever since I finished high school in 2012, I've wanted to look back and evaluate my
 performance in the academic [University Interscholastic League](http://www.uiltexas.org/) (UIL)
 competitions that I competed in with historical results.
-(To provide some background, most public high schools_uil are registered in 
+(To provide some background, most public high schools are registered in 
 the [University Interscholastic League](http://www.uiltexas.org/) (UIL), which 
 "exists to provide educational extracurricular academic, athletic, and music contests".
 For those familiar with the [National Collegiate Athletic Association](https://www.ncaa.com/) (NCAA),
 the UIL serves an analogous role for Texas high school extracurricular activities.)
 
 Aside from my own self-interest in the historical results in these competitions,
-I think that this analysis can provide some insight into which schools_uil (and individual students)
+I think that this analysis can provide some insight into which schools (and individual students)
 are really the most "elite". State-wide and nation-wide standardized test scores
 certainly are the most common measure of school and student academic strength,
 [but they may not truly be the best]().
@@ -88,32 +89,35 @@ certainly are the most common measure of school and student academic strength,
 
 To make some sense of the my analysis, the reader should be aware of the following details about the data.
 
-+ The competition data was scraped from https://www.hpscience.net/ for all years from 2008 through 2017.
++ The competition data was scraped from https://www.hpscience.net/ for all years from 2008 through 2017. [^robots]
 The data is not listed in an extremely user-friendly format (in my opinion). Consequently, the "cleaned"
 data is imperfect in some ways.
 
-+ The UIL categorizes schools_uil into one of six "conferences". The conference labels
-range from 1A, 2A, ..., 6A, where the increasing leading digit (i.e. 1, 2, etc.)
+[^robots]:
+I checked the site's "robots.txt" file prior to scraping rate limits.
+
++ The UIL categorizes schools into one of six __"Conferences"__. The conference labels
+range from __1A, 2A, ..., 6A__, where the increasing leading digit (include.echo. 1, 2, etc.)
 generally corresponds to increasing school size.
 
-+ Schools only compete against other schools_uil in their conference.
++ Schools only compete against other schools in their conference.
 
-+ The UIL defines 3 levels of competition (in order of "difficulty"): _District_, _Region_, and _State_.
++ The UIL defines __3 levels of competition__ (in order of "difficulty"): District__, __Region__, and __State__.
 These are listed in order of "difficulty". That is, 
 Winning a District competitions, results in a Region competition appearance,
-and, subsequently, winning a Region competiton results in a State competition appearance.
-(Keep in mind that schools_uil still only compete against other schools_uil in their same
+and, subsequently, winning a Region competition results in a State competition appearance.
+(Keep in mind that schools still only compete against other schools in their same
 conference, even as they advance.)
 
-+ The UIL defines _32 total Districts_ in Texas, which are aggregated into _4 Regions_.
++ The UIL defines __32 total Districts__ in Texas, which are aggregated into __4 Regions__.
 (The source of the geo-spatial data is
 https://nces.ed.gov/opengis/rest/services/K12_School_Locations/EDGE_GEOCODE_PUBLICSCH_1516/MapServer.)
 
 
-```{r viz_map_bycomplvl_grid, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load')}
+```{r viz_map_bycomplvl_grid, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load")}
 visualize_map_bycomplvl <-
   function(data = NULL) {
-    teplot::create_map_base_tx() +
+    teplot::create_map_base_tx(legend.title = element_text()) +
       geom_polygon(
         data =
           data %>%
@@ -162,7 +166,8 @@ viz_map_bydistrict <-
   schools_nces_join %>%
   filter(complvl == "District") %>%
   visualize_map_bycomplvl() +
-  guides(fill = guide_legend(title = "District", nrow = 4, byrow = TRUE))
+  guides(fill = guide_legend(title = "District", nrow = 4, byrow = TRUE)) +
+  labs(caption = str_replace(config$viz_footer, "\\. Data.*", ""))
 viz_map_bydistrict
 
 viz_map_bycomplvl_grid <-
@@ -185,13 +190,14 @@ teproj::export_ext_png(
 )
 ```
 
-+ For schools_uil, winning is a "winner-take-all" matter: only the school with the most combined points
-among its individual competitors advances. On ther other hand, an individual
-may advance even if his school does not win if he places among the top _n_.
-The value of _n_ is dependent on the competition type. [^uil_rules]
++ For schools, winning is a "winner-take-all" matter: only the school with the most combined points
+among its top handful individual competitors (3 for most competitions) advances.
+On thee other hand, an individual
+may advance even if his school does not win if he places among the top "n".
+The value of "n" is dependent on the competition type. [^uil_rules]
 
-+ There are 5 different academic competitions "types":
-_Calculator Applications_, _Computer Science_, _Mathematics_, _Number Sense_, and _Science_. [^all_competitions]
++ There are __5 different academic competitions "types"__:
+__Calculator Applications, Computer Science, Mathematics, Number Sense, and Science__. [^all_competitions]
 
 
 [^uil_rules]:
@@ -200,7 +206,7 @@ See the [UIL rules]() for more details.
 [^all_competitions]:
 [There are many more UIL competition types](http://www.uiltexas.org/files/academics/academics-brief-overview.pdf)
 than those analyzed here
-(including competitons for theatre, band, etc.), but these are the ones for academics.
+(including competitions for theater, band, etc.), but these are the ones for academics.
 
 ## What's Next
 

@@ -21,9 +21,10 @@ get_config <- function(sort = TRUE) {
       export_viz = TRUE,
       dir_viz = "figs",
       dir_scrape = "data-raw",
-      ext_scrape = "csv",
-      scrape = TRUE,
-      setup = TRUE,
+      viz_footer =
+        paste0(
+          "By: Tony ElHabr. Data source: https://www.hpscience.net/.\n"
+        ),
       years = seq(2004L, 2017L),
       confs = paste0(seq(1L, 6L), "A"),
       complvls_info =
@@ -50,18 +51,13 @@ get_config <- function(sort = TRUE) {
       url_base_uil = "https://www.hpscience.net/results/",
       url_suffix_uil = ".php",
       xpath_uil = "/html/body/table",
-      url_base_tea = "https://tea.texas.gov/",
-      url_tea = "https://tea.texas.gov/acctres/sat_act_index.html",
-      xpath_tea = "//tr //td //a",
       path_schools_nces_raw = file.path("data-raw", "EDGE_GEOCODE_PUBLICSCH_1516.xlsx"),
-      path_schools_tea_raw = file.path("data-raw", "schools-tea-scrape.csv"),
       path_schools_uil_scrape = file.path("data-raw", "schools-uil-scrape.csv"),
       path_persons_uil_scrape = file.path("data-raw", "persons-uil-scrape.csv"),
       path_schools_uil = file.path("data", "schools-uil.csv"),
       path_persons_uil = file.path("data", "persons-uil.csv"),
       path_schools_nces = file.path("data", "schools-nces.csv"),
       path_schools_nces_join = file.path("data", "schools-nces-join.csv"),
-      path_schools_tea = file.path("data", "schools-tea.csv"),
       path_functions_image = file.path("data", "functions.RData"),
       default_city = "unknown",
       default_complvl_num = 0,

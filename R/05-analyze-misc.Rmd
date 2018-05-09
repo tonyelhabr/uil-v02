@@ -1,24 +1,22 @@
 ---
-author: ""
+author: "Tony ElHabr"
 date: ""
 title: ""
 output:
   html_document:
-    toc: false
+    toc: true
+    theme: simplex
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
-  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
   # include = FALSE,
-  # results = "markdown",
-  # results = "hide",
   fig.align = "center",
-  # fig.show = "asis",
+  # results = "asis",
   fig.width = 7,
   fig.height = 7,
   # out.width = 7,
@@ -31,6 +29,7 @@ knitr::opts_chunk$set(
 
 ```{r load, include = FALSE}
 source(file.path("R", "config.R"))
+config <- get_config()
 schools_uil <-
   config$path_schools_uil %>%
   teproj::import_path_cleanly()
@@ -64,12 +63,12 @@ The criteria for identifying siblings is same last name, school, and city.
 
 So, let's start with something easy--which siblings competed together the most?
 
-<i>
+<include>
 As in the analysis of individuals and schools, I'll include myself and my school in the tables and figures
 where applicable.
-</i>
+</include>
 
-```{r siblings_funcs, include = FALSE}
+```{r siblings_funcs, include = FALSE, dependson = c("load")}
 add_name_first_pair_col <-
   function(data = NULL) {
     data %>% 
@@ -130,7 +129,7 @@ get_siblings_by_at <-
 ```
 
 
-```{r siblings, include = FALSE, dep = c('load')}
+```{r siblings, include = FALSE, dependson = c("load")}
 siblings <-
   persons_uil %>%
   get_siblings_by_at(
@@ -145,7 +144,7 @@ siblings <-
   )
 ```
 
-```{r siblings_n, include = FALSE, dep = 'siblings'}
+```{r siblings_n, include = FALSE, dependson = c("load", "siblings")}
 siblings_n <-
   siblings %>% 
   group_by(name_last, name_first_pair) %>%
@@ -157,7 +156,7 @@ siblings_n <-
 
 ```
 
-```{r html_siblings_n, echo = FALSE, include = TRUE, dep = 'siblings'}
+```{r html_siblings_n, echo = FALSE, include = TRUE, dependson = c("load", "siblings")}
 html_siblings_n <-
   siblings_n %>%
   create_kable_filt_at(
@@ -185,8 +184,7 @@ when throwing out the criteria for same year.
 For example, see the following counts for this relaxed criteria for sibling
 participation.
 
-```{r siblings_lax, include = FALSE}
-# NOTE: Probably should remove this.
+```{r siblings_lax, include = FALSE, dependson = c("load")}
 siblings_lax <-
   persons_uil %>%
   get_siblings_by_at(
@@ -203,9 +201,10 @@ siblings_lax_n <-
 siblings_lax_n
 ```
 
-```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dependson = c("load", "siblings_lax_n")}
 html_siblings_lax_n <-
   siblings_lax_n %>%
+  mutate_at(vars(n), funs(scales::comma)) %>% 
   create_kable_filt_at(
     config = config,
     col_rgx = "name_last"
@@ -220,22 +219,29 @@ Let's use the same metric used elsewhere for ranking performance--percent rank o
 scores summed across all records (`prnk_sum`)--and see which sibling pairs
 show up among the top.
 
-```{r siblings_prnk, include = FALSE, dep = 'siblings'}
+```{r siblings_prnk, include = FALSE, dependson = c("siblings")}
 siblings_prnk <-
   siblings %>%
-  select(matches("^name|^prnk")) %>%
-  gather(prak_sum_type, value, matches("^prnk")) %>%
   group_by(name_last, name_first_pair) %>%
-  summarise(sum = sum(value)) %>%
+  summarise_at(vars(matches("^prnk|^rnk|^n_")), funs(sum)) %>% 
   ungroup() %>%
-  distinct(name_last, sum, .keep_all = TRUE) %>%
-  tetidy::rank_arrange_at("sum")
+  distinct(name_last, prnk_sum, .keep_all = TRUE) %>%
+  gather(metric_sibling, value_sibling, matches("_sibling$")) %>% 
+  mutate_at(vars(metric_sibling), funs(str_replace(., "_sibling", ""))) %>% 
+  gather(metric, value, matches("^prnk|^rnk|^n_")) %>% 
+  filter(metric == metric_sibling) %>% 
+  mutate(sum = value + value_sibling) %>% 
+  select(-matches("metric_sibling|value")) %>% 
+  spread(metric, sum) %>% 
+  tetidy::rank_arrange_at("prnk")
 siblings_prnk
 ```
 
-```{r html_siblings_prnk, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_siblings_prnk, echo = FALSE, include = TRUE, dependson = c("load", "siblings_prnk")}
 html_siblings_prnk <-
   siblings_prnk %>%
+  mutate_if(is.numeric, funs(round(., 2))) %>% 
+  mutate_at(vars(starts_with("n_")), funs(scales::comma)) %>% 
   create_kable_filt_at(
     config = config,
     col_rgx = "name_last"
@@ -257,12 +263,9 @@ look at other individuals that have gone to my school. Perhaps it is a bit egoti
 but I am interested in knowing how I compare with others that have attended my school (either
 before, with, or after me).
 
-```{r persons_n_filt, include = FALSE, dep = c('load')}
+```{r persons_n_filt, include = FALSE, dependson = c("load")}
 persons_n_filt <-
   persons_uil %>%
-  # group_by(name, school, conf) %>%
-  # summarise(n = n()) %>%
-  # ungroup() %>% 
   add_stats_cols_by_at(cols_grp = c("name", "school", "city")) %>% 
   filter(str_detect(school, config$rgx_school_filt)) %>%
   tetidy::rank_arrange_at("prnk_sum") %>% 
@@ -270,9 +273,10 @@ persons_n_filt <-
 persons_n_filt
 ```
 
-```{r html_persons_n_filt, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_persons_n_filt, echo = FALSE, include = TRUE, dependson = c("load", "persons_n_filt")}
 html_persons_n_filt <-
   persons_n_filt %>% 
+  mutate_if(is.numeric, funs(round(., 2))) %>% 
   create_kable_filt_at(
     config = config,
     col_rgx = "name"

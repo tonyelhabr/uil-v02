@@ -1,24 +1,22 @@
 ---
-author: ""
+author: "Tony ElHabr"
 date: ""
 title: ""
 output:
   html_document:
-    toc: false
+    toc: true
+    theme: simplex
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
-  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
   # include = FALSE,
-  # results = "markdown",
-  # results = "hide",
   fig.align = "center",
-  # fig.show = "asis",
+  # results = "asis",
   fig.width = 7,
   fig.height = 7,
   # out.width = 7,
@@ -31,6 +29,7 @@ knitr::opts_chunk$set(
 
 ```{r load, include = FALSE}
 source(file.path("R", "config.R"))
+config <- get_config()
 persons_uil <-
   config$path_persons_uil %>%
   teproj::import_path_cleanly()
@@ -46,12 +45,13 @@ Let's take a look at individual competitors in the academic UIL competitions.
 The first question that comes to mind is that of participation--which individuals have competed the most?
 
 __NOTE:__
+
 <i>
 To give some context to the values for individual participants, 
 I'll include the numbers for myself ("Elhabr, Anthony") in applicable contexts.
 </i>
 
-```{r person_n_top, include = FALSE, dep = c('load')}
+```{r person_n_top, include = FALSE, dependson = c("load")}
 persons_n <-
   persons_uil %>%
   group_by(name, school, conf) %>%
@@ -61,7 +61,7 @@ persons_n <-
 persons_n
 ```
 
-```{r html_person_n, echo = FALSE, include = TRUE, dep = c('persons_n')}
+```{r html_person_n, echo = FALSE, include = TRUE, dependson = c("load", "persons_n")}
 html_persons_n <-
   persons_n %>%
   create_kable_filt_at(
@@ -77,7 +77,7 @@ regarding the limits of individual participation.
 Given that counts of overall participation may not be indicative of anything directly,
 it may be a better idea to break them down by conference.
 
-```{r person_n_top_byconf, include = FALSE, dep = c('persons_n')}
+```{r persons_n_top_byconf, include = FALSE, dependson = c("persons_n")}
 # n_top_conf <- 10000
 # n_top_conf <- nrow(persons_n)
 persons_n_top_byconf <-
@@ -90,7 +90,7 @@ persons_n_top_byconf <-
 persons_n_top_byconf
 ```
 
-```{r html_person_n_top_byconf, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_person_n_top_byconf, echo = FALSE, include = TRUE, dependson = c("load", "persons_n_top_byconf")}
 html_persons_n_top_byconf <-
   persons_n_top_byconf %>%
   mutate_at(vars(n), funs(scales::comma)) %>%
@@ -102,7 +102,12 @@ It seems that there are not as many individual competitors in the 6A conference 
 This seems to be true even when stratifying the individuals into groups of ranks (by
 count of individual participation).
 
-```{r viz_persons_n_top_byconf, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('persons_n')}
+```{r viz_persons_n_top_byconf, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_n")}
+lab_caption_persons_n_top_byconf <-
+  paste0(
+    config$viz_footer,
+    str_wrap("\"Tier\" of individuals ranked by count of competitions is emphasized by shading.", 100)
+  )
 viz_persons_n_top_byconf <-
   persons_n %>%
   mutate(
@@ -122,7 +127,7 @@ viz_persons_n_top_byconf <-
   teplot::labs_xy_null() +
   labs(
     title = "Count of Unique Competitors for Each Conference",
-    caption = "\"Tier\" of individuals ranked by count of competitions is emphasized by shading.",
+    caption = lab_caption_persons_n_top_byconf,
     x = "Conference",
     y = "Count of Individuals"
   )
@@ -157,7 +162,7 @@ by distinct individuals is greater. In fact, this is exactly what is observed. [
 [^previous]:
 See a separate write-up for a visual illustrating this phenomenon.
 
-```{r viz_persons_stats_byconf, include = FALSE, s = "asis", , h = 7, w = 7, eval = FALSE}
+```{r viz_persons_stats_byconf, include = FALSE, , fig.height = 7, fig.width = 7, eval = FALSE}
 # TODO: Figure out a good way to include the previously generated visual.
 viz_persons_stats_bycompconf
 ```
@@ -174,7 +179,7 @@ the number of scores less that that of a given individual for a unique competiti
 and a unique competition is defined as a unique combination of 
 year, competition level, and competition type.
 
-```{r stats, include = FALSE, dep = c('load')}
+```{r stats, include = FALSE, dependson = c("load")}
 persons_stats <-
   persons_uil %>%
   add_stats_cols_by_at(cols_grp = c("name", "school", "city"))
@@ -185,7 +190,7 @@ schools_stats <-
 ```
 
 
-```{r html_persons_stats, echo = FALSE, include = TRUE}
+```{r html_persons_stats, echo = FALSE, include = TRUE, dependson = c("load", "stats")}
 html_persons_stats <-
   persons_stats %>%
   select(-n_advanced_sum, -n_state_sum) %>%
@@ -200,7 +205,7 @@ Also, I think it's interesting to look at the distribution of counts for
 competitors defeated, advancement, and state competition appearances. The heavily right skewed
 distribution of values gives an indication of the difficulty of succeeding consistently.
 
-```{r viz_persons_stats_n_x, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
+```{r viz_persons_stats_n_x, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "html_persons_stats")}
 count_rename_at <-
   function(data = NULL, col = NULL, col_out = "value") {
     col <- sym(col)
@@ -255,7 +260,7 @@ viz_persons_stats_n_x <-
   stats_n_x %>% 
   filter(entity == "persons") %>% 
   visualize_stats_n_x() +
-  labs(title = lab_title_persons_stats_n_x)
+  labs(title = lab_title_persons_stats_n_x, caption = config$viz_footer)
 viz_persons_stats_n_x
 teproj::export_ext_png(
   viz_persons_stats_n_x,
@@ -269,12 +274,12 @@ teproj::export_ext_png(
 
 For comparison's sake, let's can visualize the same metrics aggregated at the school level.
 
-```{r viz_schools_stats_n_x, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
+```{r viz_schools_stats_n_x, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "viz_persons_stats_n_x")}
 viz_schools_stats_n_x <-
   stats_n_x %>% 
   filter(entity == "schools") %>% 
   visualize_stats_n_x() +
-  labs(title = str_replace(lab_title_persons_stats_n_x, "Individual", "School"))
+  labs(title = str_replace(lab_title_persons_stats_n_x, "Individual", "School"), caption = config$viz_footer)
 viz_schools_stats_n_x
 teproj::export_ext_png(
   viz_schools_stats_n_x,
@@ -305,20 +310,20 @@ for a given competition type.
 [^eligibility]:
 The assumption here is that each student takes four years to complete high school.
 
-```{r persons_multi, include = FALSE, dep = c('load')}
+```{r persons_multi, include = FALSE, dependson = c("load")}
 persons_multi <-
   persons_uil %>%
   count(name, school, city, conf, comp, complvl, complvl_num) %>% 
   filter(n > 1)
 ```
 
-```{r persons_n4, include = FALSE, dep = c(-1)}
+```{r persons_n4, include = FALSE, dependson = c("load", "person_multi")}
 persons_n4 <-
   persons_multi %>% 
   filter(n == 4)
 ```
 
-```{r html_persons_n4_state, echo = FALSE, include = FALSE, dep = c(-1)}
+```{r html_persons_n4_state, echo = FALSE, include = FALSE, dependson = c("load", "persons_n4")}
 html_persons_n4_state <-
   persons_n4 %>%
   filter(complvl == "State") %>% 
@@ -389,7 +394,7 @@ The sum is used instead of an average [^average] because rankings based on avera
 --and inferences made upon them--are sensitive
 to individuals who do not compete in many competitions, yet place very well in them.
 A final ranking based on a summed value does not suffer from this pitfall,
-although it can be sensitive to the sample size of each participant. (i.e. 
+although it can be sensitive to the sample size of each participant. (include.echo. 
 An individual might participate in a high number of competitions and
 under-perform relative to the average in all of them, yet their final ranking, 
 based on summed percent ranks, might indicate that they are an above-average performer.)
@@ -398,7 +403,7 @@ based on summed percent ranks, might indicate that they are an above-average per
 The average may also be considered a valid means of aggregating the values for each individual.
 
 
-```{r persons_rnks, include = FALSE, dep = c('load')}
+```{r persons_rnks, include = FALSE, dependson = c("load")}
 add_rnks_cols_by_at <-
   function(data = NULL,
            col = NULL,
@@ -428,7 +433,7 @@ persons_rnks <-
 persons_rnks
 ```
 
-```{r html_person_rnks, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_person_rnks, echo = FALSE, include = TRUE, dependson = c("load", "persons_rnks")}
 html_persons_rnks <-
   persons_rnks %>%
   create_kable_filt_at(
@@ -455,7 +460,7 @@ of percent ranks is not all too great--I found that the correlation between the
 two is anywhere between ~0.75 and ~0.95 when using either score percent rank
 or number of defeats as the metric for ranking.
 
-```{r persons_rnks_cors, include = FALSE, dep = c(-1)}
+```{r persons_rnks_cors, include = FALSE, dependson = c("load", "persons_rnks")}
 correlate_rnks_at <-
   function(data = NULL, cols = str_subset(names(data), "^rnk_")) {
     data %>%
@@ -469,7 +474,7 @@ persons_rnks_cors <-
 persons_rnks_cors
 ```
 
-```{r html_persons_rnks_cors, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_persons_rnks_cors, echo = FALSE, include = TRUE, dependson = c("load", "persons_rnks_cors")}
 html_persons_rnks_cors <-
   persons_rnks_cors %>%
   mutate_if(is.numeric, funs(round(., 4))) %>% 
@@ -486,7 +491,7 @@ Although this kind of evaluation is dependent on the skill of each team
 (independent of the competition setting), I think that it is another interesting way of
 evaluating skill.
 
-```{r persons_stats_byschool, include = FALSE, dep = c('load')}
+```{r persons_stats_byschool, include = FALSE, dependson = c("load")}
 n_ingroup_min <- 3
 persons_stats_byschool <-
   persons_uil %>%
@@ -503,9 +508,25 @@ persons_stats_byschool <-
 persons_stats_byschool
 ```
 
-```{r viz_comp_stats_byperson_byschool, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
+```{r viz_comp_stats_byperson_byschool, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_stats_byschool")}
 set.seed(42)
 pct_top_ingroup_diff_prnk <- 0.05
+lab_caption_comp_stats_byperson_byschool <-
+  paste0(
+    config$viz_footer,
+    str_wrap(
+      paste0(
+        "Blue points highlight my personal scores. ",
+        sprintf("Red emphasizes top %.0f%% of individuals who \"carried\" ", 
+                100 * pct_top_ingroup_diff_prnk),
+        "their teammates, according to differences in percent rank ",
+        "of difference in individual score and average of teammates scores. ",
+        "Only unique school-competitions observations having ",
+        sprintf("at least %.0f team members are considered.", n_ingroup_min)
+      ), 100
+    )
+  )
+
 viz_comp_stats_byperson_byschool <-
   persons_stats_byschool %>%
   mutate(ingroup_diff_prnk = percent_rank(ingroup_diff)) %>%
@@ -543,18 +564,7 @@ viz_comp_stats_byperson_byschool <-
     x = "Individual Score",
     y = "Average Score of Teammates",
     title = "Distribution of Individual and Teammate Scores",
-    caption =
-      str_wrap(
-        paste0(
-          "Blue points highlight my personal scores. ",
-          sprintf("Red emphasizes top %.0f%% of individuals who \"carried\" ", 
-                  100 * pct_top_ingroup_diff_prnk),
-          "their teammates, according to differences in percent rank ",
-          "of difference in individual score and average of teammates scores. ",
-          "Only unique school-competitions observations having ",
-          sprintf("at least %.0f team members are considered.", n_ingroup_min)
-        ), 100
-      )
+    caption = lab_caption_comp_stats_byperson_byschool
   ) +
   teplot::theme_te_facet() +
   theme(legend.position = "none")
@@ -597,7 +607,7 @@ score itself.
 I don't think it is relevant to require that the scores be in consecutive years,
 so I don't enforce that criteria.
 
-```{r persons_improve_n, include = FALSE, dep = c('load', 'persons_multi')}
+```{r persons_improve_n, include = FALSE, dependson = c("load", "persons_multi")}
 persons_improve <-
   persons_uil %>% 
   semi_join(persons_multi) %>% 
@@ -614,7 +624,7 @@ persons_improve_n <-
   count(improve)
 ```
 
-```{r html_persons_improve_n, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_persons_improve_n, echo = FALSE, include = TRUE, dependson = c("load", "persons_improve_n")}
 html_persons_improve_n <-
   persons_improve_n %>% 
   mutate_if(is.numeric, scales::comma) %>% 
@@ -636,7 +646,7 @@ is truly a 50 % - 50 % split. If the
 say 0.05--then we can deny the null hypothesis and say that there is a non-trivial
 trend of individual improvement.
 
-```{r persons_improve_btest, include = FALSE, dep = c(-1)}
+```{r persons_improve_btest, include = FALSE, dependson = c(-1)}
 persons_improve_n_c <- tibble::deframe(persons_improve_n)
 persons_improve_btest <-
   binom.test(persons_improve_n_c["TRUE"], sum(persons_improve_n_c)) %>% 
@@ -644,7 +654,7 @@ persons_improve_btest <-
 persons_improve_btest
 ```
 
-```{r html_persons_improve_btest, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_persons_improve_btest, echo = FALSE, include = TRUE, dependson = c(-1)}
 html_persons_improve_btest <-
   persons_improve_btest %>%
   select(estimate, p.value, conf.low, conf.high) %>% 
@@ -660,7 +670,7 @@ Now, let's reduce the set to just those who have appeared in competitions at a g
 competition type four times (for the sake of visualization)
 and plot the scores across years for each individual.
 
-```{r viz_persons_n4, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load', 'persons_n4')}
+```{r viz_persons_n4, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_n4")}
 persons_n4_viz <-
   persons_uil %>% 
   semi_join(persons_n4) %>% 
@@ -673,10 +683,13 @@ persons_n4_viz <-
 lab_title_person_n4 <-
   str_wrap("Percent Rank of Scores for Individuals Competing Four Times in a Specific Competition", 60)
 lab_caption_persons_n4 <-
-  str_wrap(
-    paste0(
-      "Grey lines: individual scores across sequence of years.",
-      "Blue lines: linear regression model. Blue points: average across all individuals."
+  paste0(
+    config$viz_footer,
+    str_wrap(
+      paste0(
+        "Grey lines: individual scores across sequence of years.",
+        "Blue lines: linear regression model. Blue points: average across all individuals."
+      )
     ), 100
   )
 

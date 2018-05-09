@@ -1,24 +1,22 @@
 ---
-author: ""
+author: "Tony ElHabr"
 date: ""
 title: ""
 output:
   html_document:
-    toc: false
+    toc: true
+    theme: simplex
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 knitr::opts_chunk$set(
-  c(h = 'fig.height', w = 'fig.width', s = 'fig.show', dep = 'dependson'),
   # echo = TRUE,
   echo = FALSE,
   cache = TRUE,
   # include = FALSE,
-  # results = "markdown",
-  # results = "hide",
   fig.align = "center",
-  # fig.show = "asis",
+  # results = "asis",
   fig.width = 7,
   fig.height = 7,
   # out.width = 7,
@@ -31,6 +29,7 @@ knitr::opts_chunk$set(
 
 ```{r load, include = FALSE}
 source(file.path("R", "config.R"))
+config <- get_config()
 schools_uil <-
   config$path_schools_uil %>%
   teproj::import_path_cleanly()
@@ -38,12 +37,12 @@ schools_uil <-
 schools_nces_join <-
   config$path_schools_nces_join %>% 
   teproj::import_path_cleanly()
-
 ```
 
 Having investigated individuals elsewhere, let's now take a look at the schools.
 
 __NOTE:__
+
 <i>
 Although began the examinations of competitions and individuals by looking at
 volume of participation (to provide context), 
@@ -54,12 +53,12 @@ those analyses.)
 
 ## School Scores
 
-Let's begin by looking at some of the same metrics shown for invidual students,
+Let's begin by looking at some of the same metrics shown for individual students,
 but aggregated across all students for each school. In order to give the reader
 some insight into school performance, I'll rank and show schools by a singular metric of performance
 To be consistent,
 I'll use the same
-metric used for ranking the invdividuals--summed percentile rank of scores (`prnk_sum`).
+metric used for ranking the individuals--summed percentile rank of scores (`prnk_sum`).
 
 __NOTE:__
 <i>
@@ -67,13 +66,13 @@ For the same reason stated before for showing my own scores among the individual
 I'll include the numbers for my high school ("CLEMENS") in applicable contexts.
 </i>
 
-```{r schools_stats, include = FALSE, dep = c('load')}
+```{r schools_stats, include = FALSE, dependson = c("load")}
 schools_stats <-
   schools_uil %>%
   add_stats_cols_by_at(cols_grp = c("school", "city"))
 ```
 
-```{r html_schools_stats_filt, echo = FALSE, include = TRUE, dep = c(-1)}
+```{r html_schools_stats_filt, echo = FALSE, include = TRUE, dependson = c("load", "schools_stats")}
 html_schools_stats_filt <-
   schools_stats %>%
   mutate_if(is.numeric, funs(round(., 2))) %>%
@@ -91,7 +90,7 @@ the magnitude of performance metric values aggregated at the school level.
 To begin gaining some better understanding this list of top-performing schools,
 let's break down school performance by year.
 
-```{r schools_stats_byyear, include = FALSE, dep = c('load')}
+```{r schools_stats_byyear, include = FALSE, dependson = c("load")}
 schools_stats_byyear <-
   schools_uil %>%
   add_stats_cols_by_at(cols_grp = c("school", "city", "year"))
@@ -101,7 +100,7 @@ schools_stats_byyear
 Also, let's combine the performance metric values
 with coordinate data to visualize where the best schools are located.
 
-```{r html_schools_stats_byyear, echo = FALSE, include = TRUE, dep = c(-1), eval = FALSE}
+```{r html_schools_stats_byyear, echo = FALSE, include = TRUE, dependson = c("load", "schools_stats_byyear"), eval = FALSE}
 html_schools_stats_byyear <-
   schools_stats_byyear %>%
   mutate_if(is.numeric, funs(round(., 2))) %>%
@@ -112,7 +111,7 @@ html_schools_stats_byyear <-
 html_schools_stats_byyear
 ```
 
-```{r visualize_map_tier3_at, include = FALSE, dep = c('load')}
+```{r visualize_map_tier3_at, include = FALSE, dependson = c("load")}
 add_tier3_lab_cols_at <-
   function(data = NULL,
            col = "rnk",
@@ -286,7 +285,6 @@ do_visualize_map_tier3 <-
            data_geo = schools_nces_distinct,
            col_frame = NULL,
            ...) {
-    # browser()
     data %>%
       inner_join(data_geo,
                  by = c("school")) %>%
@@ -296,17 +294,18 @@ do_visualize_map_tier3 <-
                              ...) +
       theme(panel.background = element_blank()) +
       labs(title = paste0("Most Dominant Schools"),
-           caption =
-             str_wrap(
-               paste0("Dominance is evaluated according to total percent rank."),
-               80
-             ))
+        caption =
+          paste0(
+            config$viz_footer,
+            str_wrap("Dominance is evaluated according to total percent rank.", 60)
+          )
+        )
   }
 ```
 
 Now, let's visualize school dominance across years.
 
-```{r viz_map_schools_stats_tier3_byyear, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = 'schools_stats_byyear'}
+```{r viz_map_schools_stats_tier3_byyear, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "schools_stats_byyear")}
 viz_map_schools_stats_tier3_byyear <-
   schools_stats_byyear %>% 
   group_by(year) %>% 
@@ -319,7 +318,7 @@ if(config$export_viz) {
   # gganimate::gganimate_save(
   gganimate::gganimate(
     viz_map_schools_stats_tier3_byyear,
-    filename = file.path(config$dir_viz, "viz_map_tier3_byyear.gif"),
+    filename = file.path(config$dir_viz, "viz_map_schools_stats_tier3_byyear.gif"),
     saver = "gif",
     # interval = 0.5,
     fps = 2,
@@ -328,15 +327,13 @@ if(config$export_viz) {
 }
 ```
 
-```{r eval = FALSE, echo = FALSE}
+```{r viz_map_schools_stats_tier3_byyear_gif, echo = FALSE, include = TRUE, fig.align = "center"}
 # ![](../figs/viz_map_tier3_byyear.gif))
+knitr::include_graphics("../figs/viz_map_schools_stats_tier3_byyear.gif")
 ```
 
-![](../figs/viz_map_tier3_byyear.gif)
-
-Now, if we aggregate across years (as we did before), who and where are the best of the best?
-
-```{r viz_map_schools_stats_tier3, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = 'school_stats'}
+```{r viz_map_schools_stats_tier3, echo = FALSE, include = FALSE, fig.height = 7, fig.width = 7, dependson = c("load", "school_stats")}
+# Now, if we aggregate across years (as we did before), who and where are the best of the best?
 viz_map_schools_stats_tier3 <-
   schools_stats %>%
   do_visualize_map_tier3()
@@ -354,8 +351,8 @@ teproj::export_ext_png(
 
 
 We saw elsewhere that there is no
-significant temporal trend for competititon types or competition level, but is
-there some kind of temporal trend for schools? My intuition says that there should _not_
+significant temporal trend for competition types or competition level, but is
+there some kind of temporal trend for schools? My intuition says that there should __not__
 be any kind of significant relationship between year and performance. Rather, I
 would guess that--going with the theory that certain schools tend
 to do well all of the time--the school itself should have some non-trivial
@@ -366,7 +363,7 @@ not quantified directly here.)
 Also, I hypothesize that recent
 performance is probably the strongest indicator of current performance, as it
 is in many different contexts. I should not that I think these things may only be shown
-to be true when also factroing in competition type--it seems more likely that 
+to be true when also factoring in competition type--it seems more likely that 
 schools are "elite" for certain competition types, as opposed to all competitions in aggregate.
 
 To put these ideas together more plainly, I am curious to know if the success of a school in any given year
@@ -374,12 +371,12 @@ can be predicted as a function of the school itself, the year, and the school's 
 in the previous year. [^previous]
 As before, my preference for quantifying performance is percent rank sum (`prnk_sum`) of team score 
 (relative to other schools at a given competition level). 
-Also, I think it's a good idea to "rescale" the year value
-to have a first value of 1 (corresponding to the first year in the scraped data--2005), 
+Also, I think it's a good idea to "re-scale" the year value
+to have a first value of 1 (corresponding to the first year in the scraped data--2004), 
 with subsequent years taking on subsequent integer values. (This variable is named `year_idx`).
 
-[^previous]"
-Actually, I don't specifically enforce the critiera that the previous year is used.
+[^previous]:
+Actually, I don't specifically enforce the criteria that the previous year is used.
 Rather, I use the most recent year's value, which may or may not be the previous year
 if the school did not compete in the previous year.
 
@@ -396,7 +393,7 @@ $$
 Note that, because this formula is applied to each school-competition type pair,
 the intercept term corresponds to the school entity itself.
 
-```{r schools_stats_bycomp_terms, include = FALSE, dep = c('load')}
+```{r schools_stats_bycomp_terms, include = FALSE, dependson = c("load")}
 fmla_fit <- formula(prnk_sum ~ year_idx + lag(prnk_sum, 1))
 schools_stats_bycomp_terms <-
   schools_uil %>%
@@ -419,28 +416,27 @@ schools_stats_bycomp_terms <-
 schools_stats_bycomp_terms
 ```
 
-```{r viz_schools_stats_bycomp_pv, echo = FALSE, include = TRUE, s = "asis", h = 7, w = 7, dep = c(-1)}
+```{r viz_schools_stats_bycomp_pv, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "schools_stats_bycomp_terms")}
 convert_formula_to_chr <-
   function(formula = NULL) {
     stopifnot(is_formula(formula))
     paste(formula[2], formula[3], sep = "~")
   }
 lab_title_schools_stats_bycomp_pv <-
-  str_wrap(
-    paste0(
-      "Distribution of P-Values for Linear Regression Models"
-  ), 60
-)
+  str_wrap("Distribution of P-Values for Linear Regression Models", 60)
 lab_subtitle_schools_stats_bycomp_pv <-
     paste0(convert_formula_to_chr(fmla_fit))
 lab_caption_schools_stats_bycomp_pv <-
-  str_wrap(
-    paste0(
-      "The strongly left-skewed distribution for the lag 1 term indicates that very recent success ",
-      "is most predictive of success in any given year.",
-      "Nonetheless, the even distribution of the year term indicates that year has no significant",
-      "have no significant predictive value."
-    ), 100
+  paste0(
+    config$viz_footer, 
+    str_wrap(
+      paste0(
+        "The strongly left-skewed distribution for the lag 1 term indicates that very recent success ",
+        "is most predictive of success in any given year.",
+        "Nonetheless, the even distribution of the year term indicates that year has no significant",
+        "have no significant predictive value."
+      ), 100
+    )
   )
 
 viz_schools_stats_bycomp_pv <-
@@ -478,21 +474,21 @@ while year itself is not (meaning that there is no temporal trend indicating tha
 improves or worsens over time). 
 However, my other thought that school itself has some kind of predictive value
 does __not__ appear to be true.
-[^robinson]
+[^Robinson]
 
-[^robinson]:
+[^Robinson]:
 For more information regarding interpretation of p-value distributions, I recommend
 reading [David Robinson](http://varianceexplained.org/)'s
 [very helpful blog post](http://varianceexplained.org/statistics/interpreting-pvalue-histogram/)
 on the topic.
 
-Perhaps the deduction that, in general, individual schools do _not_ tend to dominate
+Perhaps the deduction that, in general, individual schools do __not__ tend to dominate
 the rest of the competition can be comprehended in another way.
 The distribution of the percentage of possible opponent schools
-defeated at each competition level for each school should re-inforce this inference.
+defeated at each competition level for each school should re-enforce this inference.
 
 
-```{r viz_schools_n_defeat_pct, include = TRUE, s = "asis", h = 7, w = 7, dep = c('load')}
+```{r viz_schools_n_defeat_pct, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load")}
 schools_n_defeat <-
   schools_uil %>% 
   group_by(comp, conf, complvl, year) %>% 
@@ -511,7 +507,8 @@ viz_schools_n_defeat_pct <-
   facet_wrap( ~ complvl, scales = "free_y") +
   teplot::theme_te_facet_dx() +
   labs(
-    title = "School-Specific Average % of Total Possible Competitors Defeated, by Competition Level",
+    title = str_wrap("School-Specific Average % of Total Possible Competitors Defeated, by Competition Level", 60),
+    caption = config$viz_footer,
     x = "% of Competitors Defeated",
     y = "Count"
   )
@@ -531,8 +528,8 @@ Indeed, observing that the histograms do not show any noticeable skew to the rig
 supports the notion that, in general, individual schools are not dominating specific competition types.
 If this notion were true, we would see some non-trivial right-hand skew.
 This possibility is closest to being true (albeit not that close)
-with the District level of competition (i.e. the lowest level of competition).
-This observation is not all so suprising given that if it were true that
+with the District level of competition (include.echo. the lowest level of competition).
+This observation is not all so surprising given that if it were true that
 schools do dominate at some level of competition, it is most likely to be true at
 the lowest level of competition.
 

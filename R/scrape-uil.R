@@ -1,7 +1,4 @@
 
-stopifnot(config$scrape)
-
-# uil ----
 clean_raw_cols_uil <-
   function(data = NULL,
            complvl = NULL) {
