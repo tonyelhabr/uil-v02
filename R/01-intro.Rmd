@@ -70,10 +70,11 @@ think is notable in some way.
 
 ## Introduction
 
-Ever since I finished high school in 2012, I've wanted to look back and evaluate my
+After I finished high school in 2012, I thought it would be interesting
+to look back and evaluate my
 performance in the academic [University Interscholastic League](http://www.uiltexas.org/) (UIL)
 competitions that I competed in with historical results.
-(To provide some background, most public high schools are registered in 
+(To provide some background, most public high schools in Texas are registered in 
 the [University Interscholastic League](http://www.uiltexas.org/) (UIL), which 
 "exists to provide educational extracurricular academic, athletic, and music contests".
 For those familiar with the [National Collegiate Athletic Association](https://www.ncaa.com/) (NCAA),
@@ -81,9 +82,10 @@ the UIL serves an analogous role for Texas high school extracurricular activitie
 
 Aside from my own self-interest in the historical results in these competitions,
 I think that this analysis can provide some insight into which schools (and individual students)
-are really the most "elite". State-wide and nation-wide standardized test scores
-certainly are the most common measure of school and student academic strength,
-[but they may not truly be the best]().
+are really the most "elite". School-wide and invidividual average scores on state- and 
+national- standardized tests (e.g. the [SAT](https://en.wikipedia.org/wiki/SAT))
+certainly are the most common measure of academic strength,
+but I think rankings by academic competitions may be more indicative.
 
 ### About the Data
 
@@ -97,7 +99,7 @@ data is imperfect in some ways.
 I checked the site's "robots.txt" file prior to scraping rate limits.
 
 + The UIL categorizes schools into one of six __"Conferences"__. The conference labels
-range from __1A, 2A, ..., 6A__, where the increasing leading digit (include.echo. 1, 2, etc.)
+range from __1A, 2A, ..., 6A__, where the increasing leading digit (i.e. 1, 2, etc.)
 generally corresponds to increasing school size.
 
 + Schools only compete against other schools in their conference.
@@ -192,7 +194,7 @@ teproj::export_ext_png(
 
 + For schools, winning is a "winner-take-all" matter: only the school with the most combined points
 among its top handful individual competitors (3 for most competitions) advances.
-On thee other hand, an individual
+On the other hand, an individual
 may advance even if his school does not win if he places among the top "n".
 The value of "n" is dependent on the competition type. [^uil_rules]
 

@@ -59,7 +59,7 @@ something interesting on this matter.
 ### Sibling Participation
 
 [^sibling]:
-The criteria for identifying siblings is same last name, school, and city.
+
 
 So, let's start with something easy--which siblings competed together the most?
 
@@ -167,24 +167,25 @@ html_siblings_n
 ```
 Admittedly, I am a bit disappointed to find that my twin brother and I are not at
 the very top of this list. Nonetheless, we are fairly near the top, so I can take
-some satisfaction in that.
+some satisfaction in that. [^twins]
 
-I should say a couple of things about the previous table.
-
-+ I don't explicitly try to filter for twins only, but it's reasonable to believe
+[^twins]:
+I don't explicitly try to filter for twins only, but it's reasonable to believe
 that many, if not most, are twins.
 
-+ The table enforces the criteria that the siblings compete
+I should note that the scraped data does not distinguish siblings, so 
+I had to define criteria to do so.
+To be specific, the table above enforces the criteria that two people
+have the same last name, school, and city, and that they compete
 in the exact same competition--that is, a competition occurring in a given year and 
 being of a same competition type and same competition level (as well as
 the same conference and competition area, if applicable). The numbers
-are inflated when not enforcing the criteria that the siblings must have competed
+are inflated when not enforcing the criteria that the two people must have competed
 in the same competition type and level (nor conference and competition area), and even more so
 when throwing out the criteria for same year.
-For example, see the following counts for this relaxed criteria for sibling
-participation.
 
-```{r siblings_lax, include = FALSE, dependson = c("load")}
+
+```{r siblings_lax, include = FALSE, dependson = c("load"), eval = FALSE}
 siblings_lax <-
   persons_uil %>%
   get_siblings_by_at(
@@ -201,7 +202,7 @@ siblings_lax_n <-
 siblings_lax_n
 ```
 
-```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dependson = c("load", "siblings_lax_n")}
+```{r html_siblings_lax_n, echo = FALSE, include = TRUE, dependson = c("load", "siblings_lax_n"), eval = FALSE}
 html_siblings_lax_n <-
   siblings_lax_n %>%
   mutate_at(vars(n), funs(scales::comma)) %>% 
@@ -269,7 +270,7 @@ persons_n_filt <-
   add_stats_cols_by_at(cols_grp = c("name", "school", "city")) %>% 
   filter(str_detect(school, config$rgx_school_filt)) %>%
   tetidy::rank_arrange_at("prnk_sum") %>% 
-  select(-school, -city)
+  select(-school, -city, -n_state_sum)
 persons_n_filt
 ```
 
@@ -291,8 +292,8 @@ that this achievement is trivial.
 
 ## Wrap-Up
 
-I think I've done probably more investigation of my personal performance
-throughout this series of write-up, so I'll spare the reader any more.
+I think all I've done here is more investigation of my personal performance, 
+so I'll spare the reader any more of my egotistical exporation.
 And, with that said, I think this is a good point to bring an end to my
 investigation of Texas high school academic UIL competitions.
 

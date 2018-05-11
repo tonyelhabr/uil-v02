@@ -54,7 +54,7 @@ I'll include the numbers for myself ("Elhabr, Anthony") in applicable contexts.
 ```{r person_n_top, include = FALSE, dependson = c("load")}
 persons_n <-
   persons_uil %>%
-  group_by(name, school, conf) %>%
+  group_by(name, school, city, conf) %>%
   summarise(n = n()) %>%
   ungroup() %>%
   tetidy::rank_arrange_at("n")
@@ -75,7 +75,7 @@ Although the names here may not provide much insight, the counts provide some co
 regarding the limits of individual participation.
 
 Given that counts of overall participation may not be indicative of anything directly,
-it may be a better idea to break them down by conference.
+it may be a better idea to break it down by conference.
 
 ```{r persons_n_top_byconf, include = FALSE, dependson = c("persons_n")}
 # n_top_conf <- 10000
@@ -90,7 +90,7 @@ persons_n_top_byconf <-
 persons_n_top_byconf
 ```
 
-```{r html_person_n_top_byconf, echo = FALSE, include = TRUE, dependson = c("load", "persons_n_top_byconf")}
+```{r html_person_n_top_byconf, echo = FALSE, include = TRUE, dependson = c("load", "persons_n_top_byconf"), eval = FALSE}
 html_persons_n_top_byconf <-
   persons_n_top_byconf %>%
   mutate_at(vars(n), funs(scales::comma)) %>%
@@ -98,38 +98,18 @@ html_persons_n_top_byconf <-
 html_persons_n_top_byconf
 ```
 
-It seems that there are not as many individual competitors in the 6A conference (`conf 6`).
-This seems to be true even when stratifying the individuals into groups of ranks (by
-count of individual participation).
-
-```{r viz_persons_n_top_byconf, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_n")}
-lab_caption_persons_n_top_byconf <-
-  paste0(
-    config$viz_footer,
-    str_wrap("\"Tier\" of individuals ranked by count of competitions is emphasized by shading.", 100)
-  )
+```{r viz_persons_n_top_byconf, echo = FALSE, include = TRUE, fig.height = 5, fig.width = 7, dependson = c("load", "persons_n")}
 viz_persons_n_top_byconf <-
   persons_n %>%
-  mutate(
-    rnk_tier_lab =
-      case_when(
-        rnk <= 1000L ~ "Top 1k",
-        rnk <= 10000L ~ "Top 10k",
-        rnk <= 100000L ~ "Top 100k",
-        TRUE ~ "Outside top 100k"
-      )
-  ) %>%
-  mutate_at(vars(rnk_tier_lab), funs(forcats::fct_rev(factor(.)))) %>%
-  ggplot(aes(x = conf, y = n, alpha = rnk_tier_lab)) +
+  ggplot(aes(x = conf, y = n)) +
   geom_col() +
   teplot::scale_y_pretty_comma() +
-  teplot::theme_te_dx() +
-  teplot::labs_xy_null() +
+  teplot::theme_te_dx()
   labs(
-    title = "Count of Unique Competitors for Each Conference",
-    caption = lab_caption_persons_n_top_byconf,
+    title = "Count of Individual Scores Recorded for Each Conference",
+    caption = config$viz_footer
     x = "Conference",
-    y = "Count of Individuals"
+    y = "Count of Individual Scores"
   )
 viz_persons_n_top_byconf
 teproj::export_ext_png(
@@ -137,30 +117,32 @@ teproj::export_ext_png(
   export = config$export_viz,
   dir = config$dir_viz,
   units = "in",
-  height = 7,
+  height = 5,
   width = 7
 )
 ```
 
-I hypothesize that the noticeable lack of individual competitors in conference 6A--
-which is the conference with largest high schools (according to student body size)--
-can be attributed to an intentional "allocation of talent" by these schools.
-In other words, these schools may be more likely to designate their individual
-competitors to compete in only specific competitions.
-By comparison, schools in the other conferences may be more willing to let individual
+It seems that there has not been as much invdividual participation in the 6A conference (`conf 6`)--
+which is the conference with largest high schools (according to student body size).
+
+I hypothesize that this phenomenon
+can be attributed to "pre-filtering of talent" by these large schools.
+In other words, conference 6A schools may be more likely to designate their individual
+competitors to compete in only specific competitions and prevent any student
+who may be capable, yet not fully prepared, from entering a competition.
+High standards and expectations of aptitude are relatively common at very large schools,
+even if what may be deemed "unacceptable" at such a school would be very satisfactory
+at a smaller school.
+By comparison, schools in all other conferences may be more willing to let individual
 students compete in as many competition types as they desire, even if they have
 not prepared for them whatsoever.
 
-Along these lines, note that there is a limit on the number of entrants
-per school in a given competition. This means that smaller schools are much less likely to
-have enough people to reach the per-school limit, so individuals at these schools
-are more likely to compete in as many competitions as they choose.
-
 Such a phenomenon might be evident in lower scores (in aggregate) for conferences where participation
-by distinct individuals is greater. In fact, this is exactly what is observed. [^previous]
+is greater. In fact, this is exactly what is observed. [^previous] On average, 
+conference 6A has the highest scores, while conference 1A has the lowest.
 
 [^previous]:
-See a separate write-up for a visual illustrating this phenomenon.
+See the previous post.
 
 ```{r viz_persons_stats_byconf, include = FALSE, , fig.height = 7, fig.width = 7, eval = FALSE}
 # TODO: Figure out a good way to include the previously generated visual.
@@ -171,13 +153,11 @@ So what about people's scores? Who did best according to score?
 In order to simplify the data, let's look at a couple of statistics
 based on score, aggregating across all scores for each individual.
 In particular, let's look at the average and sum of placing percent rank (`prnk`) and of
-individual competitors "defeated" (`n_defeat`). [^defeat]
-
-[^defeat]:
-Competitors defeated is defined as 
+individual competitors "defeated" (`n_defeat`). (Note that
+competitors defeated is defined as 
 the number of scores less that that of a given individual for a unique competition,
 and a unique competition is defined as a unique combination of 
-year, competition level, and competition type.
+year, competition level, and competition type.)
 
 ```{r stats, include = FALSE, dependson = c("load")}
 persons_stats <-
@@ -194,6 +174,8 @@ schools_stats <-
 html_persons_stats <-
   persons_stats %>%
   select(-n_advanced_sum, -n_state_sum) %>%
+  select(-prnk_sum, -n_defeat_sum) %>% 
+  mutate_if(is.numeric, funs(round(., 2))) %>% 
   create_kable_filt_at(
     config = config,
     col_rgx = "name"
@@ -217,9 +199,9 @@ count_rename_at <-
 do_count_rename_at <-
   function(data = NULL) {
     bind_rows(
-      data %>%
-        count_rename_at("n_defeat_sum") %>% 
-        mutate(lab_stat = "Competitors Defeated"),
+      # data %>%
+      #   count_rename_at("n_defeat_sum") %>% 
+      #   mutate(lab_stat = "Competitors Defeated"),
       data %>%
         count_rename_at("n_advanced_sum") %>% 
         mutate(lab_stat = "Competition Advancements"),
@@ -272,7 +254,21 @@ teproj::export_ext_png(
 )
 ```
 
-For comparison's sake, let's can visualize the same metrics aggregated at the school level.
+For comparison's sake, let's visualize the same metrics aggregated at the school level.
+Keep in mind that while the sample of students
+should have larger counts for number of advancements and state competition appearances (y-axis) 
+for any given number of occurences (x-axis) because there are many more students than schools,
+schools are more likely to have a wider range of occurrences (x-axis) 
+because there are less
+schools in each competition (compared to the number of individuals).
+
+To understand why this is true, let's take an example:
+Say there is a District level competition where there are 8 
+schools and 40 individuals competing. It is more likely that a given school advances to the 
+next level of competition (as a result of having a total score that is higher than the scores
+of the other 7 schools) than
+any single individual, who if not from the school that advances, can only
+advance as a result of having a top "n" (e.g. 3) score.
 
 ```{r viz_schools_stats_n_x, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "viz_persons_stats_n_x")}
 viz_schools_stats_n_x <-
@@ -297,9 +293,12 @@ at a more consistent rate than individuals themselves. Intuitively, this makes s
 It can be very difficult for individuals alone to beat out the competition, especially
 if they have an "off" day.
 On the other hand, schools, relying on teams of individuals, are placed according to the sum
-of the top handful (usually the top three) of individual competitor scores.
-Thus, school placings are more likely to be similar across years, meaning that schools
-that are observed to do well in any given year are likely to do well in other years as well.
+of the top "n" (e.g. 3) of individual competitor scores.
+Thus, because school scores are dependent on groups of individuals--
+who will tend to perform more consistently in aggregate than any one individual--
+school placings are more likely to be similar across years, meaning that schools
+that are observed to do well in any given year are more likely to do well in other years as well
+(relative to individual competitors).
 
 So it should be obvious that it is difficult to make it the highest level of competition--State.
 But exactly how difficult is it? Let's identify those people (and their scores)
@@ -394,7 +393,7 @@ The sum is used instead of an average [^average] because rankings based on avera
 --and inferences made upon them--are sensitive
 to individuals who do not compete in many competitions, yet place very well in them.
 A final ranking based on a summed value does not suffer from this pitfall,
-although it can be sensitive to the sample size of each participant. (include.echo. 
+although it can be sensitive to the sample size of each participant. (i.e. 
 An individual might participate in a high number of competitions and
 under-perform relative to the average in all of them, yet their final ranking, 
 based on summed percent ranks, might indicate that they are an above-average performer.)

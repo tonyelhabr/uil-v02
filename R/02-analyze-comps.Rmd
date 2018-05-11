@@ -122,7 +122,7 @@ scale_fill_set1 <- function() {
 
 Some of the first questions that might come to mind are those regarding the 
 number of schools
-in each level of competition (include.echo. District, Region, and State) and each 
+in each level of competition (District, Region, and State) and each 
 conference classification level (1A, 2A, ... 6A).
 
 ```{r summ_n_bycomplvl, include = FALSE, dependson = c("load")}
@@ -152,12 +152,12 @@ viz_n_bycomplvl <-
     aes(yintercept = n_mean),
     color = "black",
     linetype = "dashed",
-    size = 1
+    size = 2
   ) +
   teplot::scale_y_pretty_comma() +
   facet_wrap (~ complvl, scales = "free") +
   labs(
-    title = "Count of Schools by Different UIL Groups",
+    title = "Average Annual Count of Schools by Different UIL Groups",
     caption =
       paste0(
         config$viz_footer,
@@ -169,12 +169,12 @@ viz_n_bycomplvl <-
             "District and Region are references to competition levels,",
             " while conference is a classification based on school size.) ",
             "State is not shown because there is no \"subgroup\" of it."
-          )
-        ),
+          ),
         100
+        )
       )
   ) +
-  teplot::labs_xy_null() +
+  labs(x = "Group \"Number\"", y = "Aveaage Annual Count") +
   teplot::theme_te_facet() +
   theme(legend.position = "none")
 viz_n_bycomplvl
@@ -203,7 +203,7 @@ of data. Nevertheless, these different "groupings" each stratify the sample popu
 
 With some context regarding the number of schools in each competition level and in conference,
 let's now consider the number of distinct individual competitors and schools for each
-competition type (include.echo. Calculator, Computer Science, etc.)
+competition type (i.e. Calculator, Computer Science, etc.)
 
 
 ```{r summ_n_bycomp, include = FALSE, dependson = c("load")}
@@ -561,6 +561,8 @@ teproj::export_ext_png(
 )
 ```
 
+One might observe the following from the above plot:
+
 + It appears from the by-year breakdown that there is no discernible trends among score distributions
 across years. The lack of pattern in score distributions
 over time is a strong indication that the tests have about the same difficulty every year.
@@ -574,7 +576,7 @@ more "superior" competitors advancing to higher levels of competition.
 
 + From the conference visual, it is apparent that scores generally increase
 with increasing conference number, which, itself, corresponds with increasing student body size.
-This could be indicative of a number of factors:
+This could be indicative of a number of factors, including:
 
     - Larger schools have more "superior" individual competitors, perhaps due
     to having a larger "talent pool" of students.
@@ -585,20 +587,8 @@ This could be indicative of a number of factors:
     scmaller schools push individuals to participate in competitions
     even if they are not really prepared to do so.
     (This might be considered a form of [selection bias](https://en.wikipedia.org/wiki/Selection_bias).)
-        
-    - There may not be as as many unique students competing in larger conferences,
-    leading to the possibility that the scores in the larger conference are more
-    likely to be subject to high variance. [^larger]
-        
-    While I somewhat doubt the last of these possibilities (because high variance
-    would equally likely manifest in lower scores in larger conferences), the other
-    two seem valid.
 
-[^larger]:
-It was shown before that the number of schools across conferences is 
-relatively even, so one would need to stratify the population by individuals rather than schools.
-
-So maybe there isn't a some broad, temporal trend to the scores.
+So maybe there isn't some broad, temporal trend to the scores.
 But is there a trend in scores among the competition levels (for a given competition type)?
 One would think that, assuming that test difficulty is constant
 across competition levels, 
@@ -638,6 +628,8 @@ persons_stats_bycompcomplvl_diffs_tidy <-
 ```
 
 ```{r viz_persons_stats_bycompcomplvl_diffs, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_stats_bycompcomplvl_diffs")}
+lab_title_persons_stats_bycompcomplvl_diffs <-
+  str_wrap("% Change in Average Scores for Each Competition Type, By Competition Level", 60)
 viz_persons_stats_bycompcomplvl_diffs <-
   persons_stats_bycompcomplvl_diffs_tidy  %>%
   mutate_at(
@@ -655,7 +647,7 @@ viz_persons_stats_bycompcomplvl_diffs <-
   teplot::theme_te_facet_dx() +
   theme(axis.text.x = element_blank()) +
   teplot::labs_xy_null() +
-  labs(title = str_wrap("% Change in Score Distributions for Each Competition Type, By Competition Level", 60),
+  labs(title = lab_title_persons_stats_bycompcomplvl_diffs,
        caption = config$viz_footer)
 viz_persons_stats_bycompcomplvl_diffs
 
@@ -714,13 +706,15 @@ persons_stats_bycompyear_terms
 ```
 
 ```{r viz_persons_stats_bycompyear_diffs, echo = FALSE, include = TRUE, fig.height = 7, fig.width = 7, dependson = c("load", "persons_stats_bycompyear_terms")}
+lab_title_persons_stats_bycompyear_diffs <-
+  str_wrap("Year-to-Year % Change in Average Scores for Each Competition Type, By Competition Level", 60)
 lab_caption_persons_stats_bycompyear_diffs <-
   paste0(
     config$viz_footer,
     str_wrap(
-      "Dashed line: Competition-specific average year-to-year difference percentage."
-    ),
+      "Dashed line: Competition-specific average % change across all year-to-year intervals.",
     100
+    )
   )
 viz_persons_stats_bycompyear_diffs <-
   persons_stats_bycompyear_diffs %>%
@@ -740,7 +734,7 @@ viz_persons_stats_bycompyear_diffs <-
   teplot::theme_te_facet() +
   theme(legend.position = "none") +
   teplot::labs_xy_null() +
-  labs(title = lab_title_stats_bycomp_prefix,
+  labs(title = lab_title_persons_stats_bycompyear_diffs,
        subtitle = "By Year",
        caption = lab_caption_persons_stats_bycompyear_diffs)
 viz_persons_stats_bycompyear_diffs
@@ -769,9 +763,9 @@ Observe the
 for [linear regression](https://en.wikipedia.org/wiki/Linear_regression)
 models fit for each competition type,
 where the average year-to-year score difference (as a percentage) is estimated given
-average competition-specific score and year. Taking the customary p-value threshold of 0.05
+average individual competitor score and year. Taking the customary p-value threshold of 0.05
 as the level of significance (where one may deduce that the
-model is not predictive if the the p.value is greater than the threshold value), the year term
+model is not predictive if the p.value is greater than the threshold value), the year term
 is shown to be insignificant.
 
 $$
@@ -796,7 +790,7 @@ competition over time, including the following.
 to result in scores that are similar to historical scores for a given competition
 and/or competition level.
 
-+ Or, perhaps more likely, test makers and competition skill level
++ Or, perhaps more likely, the difficulty of tests and the skill level of competitors
 have stayed relatively the same over time.
 
 If the latter is true, at the very least

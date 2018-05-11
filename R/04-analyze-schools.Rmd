@@ -44,7 +44,7 @@ Having investigated individuals elsewhere, let's now take a look at the schools.
 __NOTE:__
 
 <i>
-Although began the examinations of competitions and individuals by looking at
+Although I began the examinations of competitions and individuals by looking at
 volume of participation (to provide context), 
 I'll skip an analogous discussion here
 because the participation of schools is shown indirectly through
@@ -55,7 +55,7 @@ those analyses.)
 
 Let's begin by looking at some of the same metrics shown for individual students,
 but aggregated across all students for each school. In order to give the reader
-some insight into school performance, I'll rank and show schools by a singular metric of performance
+some insight into school performance, I'll rank and show schools by a singular metric of performance.
 To be consistent,
 I'll use the same
 metric used for ranking the individuals--summed percentile rank of scores (`prnk_sum`).
@@ -362,7 +362,7 @@ to a strong support group of teachers, demographics, house income, or some other
 not quantified directly here.)
 Also, I hypothesize that recent
 performance is probably the strongest indicator of current performance, as it
-is in many different contexts. I should not that I think these things may only be shown
+is in many different contexts. I should note that I think these things may only be shown
 to be true when also factoring in competition type--it seems more likely that 
 schools are "elite" for certain competition types, as opposed to all competitions in aggregate.
 
@@ -432,9 +432,9 @@ lab_caption_schools_stats_bycomp_pv <-
     str_wrap(
       paste0(
         "The strongly left-skewed distribution for the lag 1 term indicates that very recent success ",
-        "is most predictive of success in any given year.",
-        "Nonetheless, the even distribution of the year term indicates that year has no significant",
-        "have no significant predictive value."
+        "is most predictive of success in any given year. ",
+        "Nonetheless, the even distribution of the year term indicates that year ",
+        "has no significant predictive value."
       ), 100
     )
   )
@@ -468,13 +468,18 @@ teproj::export_ext_png(
 The distribution of [p-values](https://en.wikipedia.org/wiki/P-value)
 for each term in the model provide some insight
 regarding the predictive power of the variables. Visually, it does seem like
-my two of my hypotheses are valid--recent performance does seem to be predictive
+two of my hypotheses are valid:
+
+1. Recent performance does seem to be predictive
 of school performance in a given competition type in any given year.
-while year itself is not (meaning that there is no temporal trend indicating that performance
-improves or worsens over time). 
+
+2. Year itself is not predictive
+(meaning that there is no temporal trend indicating that performance
+improves or worsens over time).
+
+
 However, my other thought that school itself has some kind of predictive value
-does __not__ appear to be true.
-[^Robinson]
+does __not__ appear to be true. [^Robinson]
 
 [^Robinson]:
 For more information regarding interpretation of p-value distributions, I recommend
@@ -524,11 +529,11 @@ teproj::export_ext_png(
 )
 ```
 
-Indeed, observing that the histograms do not show any noticeable skew to the right
+Indeed, observing that the histograms do __not__ show any noticeable skew to the right
 supports the notion that, in general, individual schools are not dominating specific competition types.
-If this notion were true, we would see some non-trivial right-hand skew.
+If this theory were true, we would see some non-trivial right-hand skew.
 This possibility is closest to being true (albeit not that close)
-with the District level of competition (include.echo. the lowest level of competition).
+with the District level of competition (i.e. the lowest level of competition).
 This observation is not all so surprising given that if it were true that
 schools do dominate at some level of competition, it is most likely to be true at
 the lowest level of competition.
