@@ -52,14 +52,11 @@ I think are worth investigating.
 ## Siblings
 
 
-Let's look at the performance of siblings. [^siblings] Maybe this topic only came to mind for
+Let's look at the performance of siblings. Maybe this topic only came to mind for
 me because I have brothers, on of who is my twin, but I think anyone can find
 something interesting on this matter.
 
 ### Sibling Participation
-
-[^sibling]:
-
 
 So, let's start with something easy--which siblings competed together the most?
 
