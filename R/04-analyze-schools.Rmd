@@ -2,6 +2,7 @@
 author: "Tony ElHabr"
 date: ""
 title: ""
+always_allow_html: yes
 output:
   html_document:
     toc: true
@@ -37,6 +38,11 @@ schools_uil <-
 schools_nces_join <-
   config$path_schools_nces_join %>% 
   teproj::import_path_cleanly()
+```
+
+```{r path_save, include = FALSE}
+path_save <-
+  file.path(config$dir_data, "analysis-texas-high-schools-academics-4-schools.RData")
 ```
 
 Having investigated individuals elsewhere, let's now take a look at the schools.
@@ -544,5 +550,9 @@ Certainly analysis of schools in these academic UIL competitions
 deserves some more attention than that given here, but I think some of the
 biggest questions about school performance have been answered.
 
+```{r save, include = FALSE, dependson = c("load", "path_save")}
+# save.image(file = path_save)
+session::save.session(file = path_save)
+```
 
 

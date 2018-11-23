@@ -2,6 +2,7 @@
 author: "Tony ElHabr"
 date: ""
 title: ""
+always_allow_html: yes
 output:
   html_document:
     toc: true
@@ -37,6 +38,11 @@ schools_uil <-
 persons_uil <-
   config$path_persons_uil %>%
   teproj::import_path_cleanly()
+```
+
+```{r path_save, include = FALSE}
+path_save <-
+  file.path(config$dir_data, "analysis-texas-high-schools-academics-5-miscellaneous.RData")
 ```
 
 There's a lot to analyze with the Texas high school academic UIL data set.
@@ -158,7 +164,7 @@ html_siblings_n <-
   siblings_n %>%
   create_kable_filt_at(
     config = config,
-    col_rgx = "name_last",
+    col_rgx = "name_last"
   )
 html_siblings_n
 ```
@@ -294,3 +300,7 @@ so I'll spare the reader any more of my egotistical exporation.
 And, with that said, I think this is a good point to bring an end to my
 investigation of Texas high school academic UIL competitions.
 
+```{r save, include = FALSE, dependson = c("load", "path_save")}
+# save.image(file = path_save)
+session::save.session(file = path_save)
+```

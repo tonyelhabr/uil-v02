@@ -16,9 +16,11 @@ library("tetidy")
 get_config <- function(sort = TRUE) {
   ret <-
     list(
-      export_data = TRUE,
+      # export_data = TRUE,
+      export_data = FALSE,
       dir_data = "data",
-      export_viz = TRUE,
+      # export_viz = TRUE,
+      export_viz = FALSE,
       dir_viz = "figs",
       dir_scrape = "data-raw",
       viz_footer =

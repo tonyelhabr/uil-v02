@@ -2,6 +2,7 @@
 author: "Tony ElHabr"
 date: ""
 title: ""
+always_allow_html: yes
 output:
   html_document:
     toc: true
@@ -116,6 +117,11 @@ scale_color_set1 <- function() {
 scale_fill_set1 <- function() {
   scale_fill_brewer(palette = "Set1")
 }
+```
+
+```{r path_save, include = FALSE}
+path_save <-
+  file.path(config$dir_data, "analysis-texas-high-schools-academics-2-competitions.RData")
 ```
 
 ## Competition Participation
@@ -779,7 +785,8 @@ html_persons_stats_bycompyear_terms <-
   select(comp, term, p.value) %>%
   mutate_if(is.numeric, funs(round(., 4))) %>%
   spread(term, p.value) %>%
-  teproj::create_kable(n_show = Inf)
+  # teproj::create_kable(n_show = Inf)
+  create_kable_at(n_show = Inf)
 html_persons_stats_bycompyear_terms
 ```
 
@@ -807,3 +814,7 @@ academic UIL competitions are illustrated in a number of different
 ways--by competition type, by competition level, by year, and by variations of these.
 Next, we'll take a closer look at some more specific questions, focusing on individual competitors.
 
+```{r save, include = FALSE, dependson = c("load", "path_save")}
+# save.image(file = path_save)
+session::save.session(file = path_save)
+```

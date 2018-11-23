@@ -42,13 +42,40 @@ filter_rnk_or_rgx_at <-
     ret
   }
 
+# Note: Modifying this to work with markdown better.
+# create_kable_filt_at <-
+#   function(data = NULL, format = "html", ...) {
+#     n_footnote <- nrow(data)
+#     data %>%
+#       filter_rnk_or_rgx_at(...) %>%
+#       teproj::create_kable(
+#         n_show = Inf,
+#         show_footnote = TRUE,
+#         n_footnote = n_footnote,
+#         format = format
+#       )
+#   }
+create_kable_at <-
+  function(data = NULL,
+           n_show = 10L,
+           n_footnote = nrow(data),
+           show_footnote = ifelse(n_footnote > n_show, TRUE, FALSE),
+           format = "markdown",
+           ...) {
+    stopifnot(is.data.frame(data))
+    stopifnot(format == "markdown")
+    res <- data
+    if (show_footnote & (n_show < nrow(data))) {
+      res <- res[1:n_show,]
+    }
+    knitr::kable(res, format = format, escape = FALSE)
+  }
+
 create_kable_filt_at <-
-  function(data = NULL, format = "html", ...) {
-    n_footnote <- nrow(data)
+  function(data = NULL, ...) {
     data %>%
       filter_rnk_or_rgx_at(...) %>%
-      teproj::create_kable(n_show = Inf, show_footnote = TRUE, n_footnote = n_footnote, format = format)
-
+      create_kable_at(show_footnote = TRUE)
   }
 
 add_stats_cols_by_at <-

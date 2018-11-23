@@ -2,6 +2,7 @@
 author: "Tony ElHabr"
 date: ""
 title: ""
+always_allow_html: yes
 output:
   html_document:
     toc: true
@@ -27,6 +28,7 @@ knitr::opts_chunk$set(
 
 ```
 
+
 <style>
 .toggle {
   height: 1.85em;
@@ -51,6 +53,10 @@ schools_nces_join <-
   teproj::import_path_cleanly()
 ```
 
+```{r path_save, include = FALSE}
+path_save <-
+  file.path(config$dir_data, "analysis-texas-high-schools-academics-1-intro.RData")
+```
 
 <!--<div class="toggle"><button>Show</button>-->
 
@@ -225,6 +231,10 @@ In this series, I plan to investigate the following topics:
 Performance evaluation relies primarily upon
 test scores (from which other useful metrics may be derived, such as advancement).
 
+```{r save, include = FALSE, dependson = c("load", "path_save")}
+# save.image(file = path_save)
+session::save.session(file = path_save)
+```
 
 
 

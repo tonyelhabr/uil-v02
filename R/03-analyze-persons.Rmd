@@ -2,6 +2,7 @@
 author: "Tony ElHabr"
 date: ""
 title: ""
+always_allow_html: yes
 output:
   html_document:
     toc: true
@@ -36,6 +37,11 @@ persons_uil <-
 schools_uil <-
   config$path_schools_uil %>%
   teproj::import_path_cleanly()
+```
+
+```{r path_save, include = FALSE}
+path_save <-
+  file.path(config$dir_data, "analysis-texas-high-schools-academics-3-individuals.RData")
 ```
 
 Let's take a look at individual competitors in the academic UIL competitions.
@@ -94,7 +100,8 @@ persons_n_top_byconf
 html_persons_n_top_byconf <-
   persons_n_top_byconf %>%
   mutate_at(vars(n), funs(scales::comma)) %>%
-  teproj::create_kable()
+  # teproj::create_kable()
+  create_kable_at()
 html_persons_n_top_byconf
 ```
 
@@ -107,7 +114,7 @@ viz_persons_n_top_byconf <-
   teplot::theme_te_dx()
   labs(
     title = "Count of Individual Scores Recorded for Each Conference",
-    caption = config$viz_footer
+    caption = config$viz_footer,
     x = "Conference",
     y = "Count of Individual Scores"
   )
@@ -347,7 +354,7 @@ html_persons_n4_state_n2 <-
   filter(n > 1) %>% 
   create_kable_filt_at(
     config = config,
-    col_rgx = "name",
+    col_rgx = "name"
   )
 html_persons_n4_state_n2
 ```
@@ -477,7 +484,8 @@ persons_rnks_cors
 html_persons_rnks_cors <-
   persons_rnks_cors %>%
   mutate_if(is.numeric, funs(round(., 4))) %>% 
-  teproj::create_kable()
+  # teproj::create_kable()
+  create_kable_at()
 html_persons_rnks_cors
 ```
 
@@ -659,7 +667,8 @@ html_persons_improve_btest <-
   select(estimate, p.value, conf.low, conf.high) %>% 
   mutate_if(is.numeric, funs(round(., 4))) %>% 
   gather(metric, value) %>% 
-  teproj::create_kable()
+  # teproj::create_kable()
+  create_kable_at()
 html_persons_improve_btest
 ```
 
@@ -734,5 +743,8 @@ It is evident visually that people do have a tendency to improve over time.
 I'll leave the discussion of individuals at that, although there is much
 more that could be explored.
 
-
+```{r save, include = FALSE, dependson = c("load", "path_save")}
+# save.image(file = path_save)
+session::save.session(file = path_save)
+```
 
